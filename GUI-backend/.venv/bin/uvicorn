@@ -1,4 +1,4 @@
-#!/Users/live/repos/UHF-GS-CSP-Term-Software/GUI-backend/.venv/bin/python3
+#!/Users/live/uhf-gs-csp-term-software/GUI-backend/.venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
