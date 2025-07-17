@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+import time
+
+APPNAME = 'libadcs-client'
+
+top	= '.'
+out	= 'build'
+
+def options(ctx):
+	pass
+	
+def configure(ctx):
+	pass
+	
+def build(ctx):
+	ctx(export_includes=['.'], name='libadcs-client')
+	ctx.objects(
+		source = ctx.path.ant_glob('*.c', excl='checkout_adcs.c'), 
+		target = APPNAME,
+		includes = '.',
+		export_includes = '.',
+		use = ['csp', 'gosh', 'param', '3rd']
+	)

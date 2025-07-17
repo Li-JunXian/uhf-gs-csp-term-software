@@ -1,2 +1,2 @@
-# uhf-gs-csp-term-software
-Ultra High Frequency Ground Station CubeSat Space Protocol Software. With the implementation of a Graphical User Interface (GUI) backend and frontend.
+# UHF-GS-CSP-Term-Software
+Ultra High Frequency Ground Station CubeSat Space Protocol Software

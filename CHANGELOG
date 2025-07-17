@@ -1,0 +1,57 @@
+csp-term v2.9, 04.06.2017
+---------------------------
+- clients: Fix for 'ax100 hk' command in nanocom-ax client
+- clients: Fix for detecting timeout on 'eps hk' command in nanopower command
+- clients: Updated P60 client modules
+- libftp: Added rmdir to remote interface
+- libftp: Now possible to change chunk size with ftp server cmd
+- liblog: Updated usage for 'log insert' command
+
+csp-term v2.8, 31.01.2017
+---------------------------
+- Mission library (libhk and libfp) supported as add-on
+
+csp-term v2.7, 23.11.2016
+---------------------------
+- clients: Updated client interfaces for NanoPower P31U, NanoPower P60 and NanoCam C1U
+
+csp-term v2.6, 07.11.2016
+---------------------------
+- Increase param_max_tables from 20 to 40 for libparam
+
+csp-term v2.5 18.08.2016
+------------------------
+- libcsp: removed wscript --with-freertos argument, imporoved rdp performance and reliability
+- libftp: optimised progress bar, increased default timeouts
+- libparam: client clean up and updated documentation on client interface (rparam)
+
+csp-term v2.4 16.06.2016
+------------------------
+- Added documentation on installation and build
+
+csp-term v2.3 19.04.2016
+------------------------
+- Added more documentation on libraries
+- Fixed alignment problem with GOSH commands when building on 32 bit Linux
+
+csp-term v2.2 10.09.2015
+------------------------
+- Remove dependency on libelf
+- Remove --enable-adcs configure option
+
+csp-term v2.1 04.08.2015
+------------------------
+- Submodule update
+- Added libclients (nanomind, nanocom, nanopower, nanohub, nanocam)
+
+csp-term v2.0 08.05.2015
+------------------------
+- Re-launch of CSP-term based on new gomspace-sdk library structure
+- Builtin FTP client/server (with LZO compression)
+- Builtin GOSH service (with optional support for telnet-like redirection)
+- Supports building for Linux and embedded linux
+- Latest CIDR LibCSP for networking
+- Builtin CSP server for basic CMP services
+- Automatic command discovery in object files
+- libparam client and server
+- liblog example

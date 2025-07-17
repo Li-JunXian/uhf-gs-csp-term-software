@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+import time
+
+APPNAME = 'a3200-adcs-client'
+VERSION = time.strftime("%Y.%m", time.gmtime())
+
+top	= '.'
+out	= 'build'
+
+def options(ctx):
+	pass
+	
+def configure(ctx):
+	pass
+	#ctx.env.append_unique('FILES_A3200_ADCS_CLIENT', ['gomx3_adcs_hk.c'])
+
+def build(ctx):
+	ctx(export_includes=['.'], name='a3200-adcs-client')
+	ctx.objects(
+		source = ctx.path.ant_glob('*.c', excl=''), 
+		target = APPNAME,
+		includes = '.',
+		export_includes = '.',
+		use = ['a3200-client', 'libadcs-client', 'libhk', 'param', 'hk']
+	)

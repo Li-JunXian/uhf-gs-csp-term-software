@@ -1,0 +1,61 @@
+body {
+  margin: 0;
+  color: #fff;
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  background-image: linear-gradient(to bottom, #020917, #101725);
+}
+
+.content button {
+  position: absolute;
+  font-size: 1.2rem;
+  font-weight: 400;
+  opacity: 0.5;
+  z-index: 10;
+}
+
+#addbutton {
+  top: 0;
+  left: 0;
+}
+
+#closeButton {
+  top: 0;
+  left: 85;
+  height: 28;
+  width: 28;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#addSatellite {
+  top: 0;
+  left: 0;
+  width: 85;
+}
+
+#addStation {
+  top: 28;
+  left: 0;
+  width: 85;
+  display: flex;
+  justify-content: center;
+}
+
+#inputForm {
+  position:absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  padding-left: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+#selector {
+  padding-left: 8px;
+}
+
+
+
+
