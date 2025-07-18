@@ -46,7 +46,6 @@
 #include <command/command.h>
 
 #include <errno.h>
-
 #include "status_publisher.h"
 
 /* Path to FIFO */
@@ -237,7 +236,7 @@ int main(int argc, char * argv[]) {
 		"\"lat\":1.3456,"
 		"\"lon\":103.6789,"
 		"\"alt\":15.0,"
-        	"\"true_north_offset\":80"
+        "\"true_north_offset\":80"
 		"}"
 	);
 	
@@ -286,7 +285,7 @@ int main(int argc, char * argv[]) {
 	/* Wait here for console to end */
 	pthread_join(handle_console, NULL);
 	pthread_join(handle_server, NULL);
-	pthread_join(handle_doppler, NULL);					// (Disable antenna tracking)
+	pthread_join(handle_doppler, NULL);						// (Disable antenna tracking)
 	pthread_join(handle_tleupdate, NULL);					// (Disable antenna tracking)
 	pthread_join(handle_tcp, NULL);
 

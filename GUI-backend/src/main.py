@@ -12,6 +12,26 @@ logging.basicConfig(level=LOG_LEVEL)
 
 store = TelemetryStore()
 
+import time
+
+# push one fake telemetry frame
+store.push({
+    "timestamp": time.time(),
+    "type": "telemetry",
+    "src": 23,
+    "dst": 1,
+    "src_port": 5,
+    "dst_port": 15,
+    "payload": "Test telemetry data",
+})
+
+# push one fake GS-status update
+store.push({
+    "timestamp": time.time(),
+    "type": "gs_status",
+    "mode": "Tracking"
+})
+
 # inject store into REST & WS modules
 rest.store = store
 ws_handler = WSHandler(store)
