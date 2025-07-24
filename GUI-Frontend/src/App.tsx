@@ -1,5 +1,6 @@
 import { useState, useMemo, type ChangeEvent, type FormEvent } from "react";
 import "./App.css";
+import Header from "./Util/Header";
 import Globe from "react-globe.gl";
 
 type labels = {
@@ -128,6 +129,7 @@ const App = () => {
   console.log(satData);
   return (
     <div className="content">
+      <Header />
       {isAdding[0] ? (
         <div id="selector">
           <button
