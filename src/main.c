@@ -229,7 +229,7 @@ int main(int argc, char * argv[]) {
 	#define LOG_STORE_SIZE 0x200
 	
 	/* Call once at startup: */
-    status_publisher_init();
+    	status_publisher_init();
 
 	// Publish static info once:
 	status_publisher_send(
@@ -244,7 +244,7 @@ int main(int argc, char * argv[]) {
 	);
 	
 	// Publish initial mode:
-    status_publisher_send(
+    	status_publisher_send(
 		"{"
 		"\"type\":\"gs_mode\","
 		"\"mode\":\"Idle\""
