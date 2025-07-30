@@ -2,7 +2,6 @@ body {
   margin: 0;
   color: #fff;
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  background-image: linear-gradient(to bottom, #020917, #101725);
 }
 
 .content button {
@@ -14,12 +13,12 @@ body {
 }
 
 #addbutton {
-  top: 0;
+  top: 86;
   left: 0;
 }
 
 #closeButton {
-  top: 0;
+  top: 86;
   left: 85;
   height: 28;
   width: 28;
@@ -29,13 +28,13 @@ body {
 }
 
 #addSatellite {
-  top: 0;
+  top: 86;
   left: 0;
   width: 85;
 }
 
 #addStation {
-  top: 28;
+  top: 114;
   left: 0;
   width: 85;
   display: flex;
@@ -55,7 +54,3 @@ body {
 #selector {
   padding-left: 8px;
 }
-
-
-
-
