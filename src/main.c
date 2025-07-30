@@ -226,17 +226,17 @@ int main(int argc, char * argv[]) {
 	#define LOG_STORE_SIZE 0x200
 	
 	/* Call once at startup: */
-    	status_publisher_init();
+    status_publisher_init();
 
-    	// Publish static info once:
-    	status_publisher_send(
+	// Publish static info once:
+	status_publisher_send(
 		"{"
 		"\"type\":\"gs_info\","
 		"\"gs_name\":\"LumeliteGS\","
 		"\"lat\":1.3456,"
 		"\"lon\":103.6789,"
 		"\"alt\":15.0,"
-        "\"true_north_offset\":80"
+		"\"true_north_offset\":80"
 		"}"
 	);
 	
