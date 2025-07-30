@@ -41,9 +41,9 @@ def kiss_deframe(stream: bytearray) -> list[bytes]:
 
 # ---------- CSP header (6-byte disk format) ----------
 def unpack_header(h: bytes) -> dict:
-    """Return dict with prio, src, dst, dport, sport, length."""
-    if len(h) != 6:
-        raise ValueError("expect 6-byte header")
+    """Return dict with prio, src, dst, dport, sport, length, flag."""
+    if len(h) != 7:
+        raise ValueError("expect 7-byte header")
     id_lo2 = h[0] | (h[1] << 8)
     prio  = (id_lo2 >> 13) & 0x07          # top 3 bits
     src   = (id_lo2 >> 8)  & 0x1F
@@ -51,5 +51,14 @@ def unpack_header(h: bytes) -> dict:
     dport = h[2] >> 2
     sport = ((h[2] & 0x03) << 4) | (h[3] >> 4)
     length = (h[4] << 8) | h[5]
-    return dict(prio=prio, src=src, dst=dst,
-                dport=dport, sport=sport, length=length)
+    # extract new flag field
+    flag = h[6]
+    return dict(
+        prio=prio,
+        src=src,
+        dst=dst,
+        dport=dport,
+        sport=sport,
+        length=length,
+        flag=flag
+    )

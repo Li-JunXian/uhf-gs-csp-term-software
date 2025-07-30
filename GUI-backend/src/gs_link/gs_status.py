@@ -38,10 +38,11 @@ class GSStatusReader:
                     continue
                 try:
                     pkt = json.loads(line)
-                    pkt["timestamp"] = time.time()
-                    # push into the same store your TelemetryServer uses
-                    asyncio.get_event_loop().call_soon_threadsafe(self.store.push, pkt)
                 except json.JSONDecodeError as e:
-                    log.warning(f"Ignoring corrupt JSON from FIFO: {e!r} -- {line!r}")
+                    log.error(f"Malformed JSON in FIFO: {e} -- {line!r}")
                     continue
+
+                # Append timestamp and push into the shared store
+                pkt["timestamp"] = time.time()
+                asyncio.get_event_loop().call_soon_threadsafe(self.store.push, pkt)
                 log.debug(f"GS Status update: {pkt}")
