@@ -52,7 +52,7 @@
 #define STATUS_FIFO "/tmp/gs-status-fifo"
 
 /* Call once at startup: */
-void status_publisher_init() {
+/**void status_publisher_init() {
 	// create (or re-create) the FIFO, 0666 so any user can read
 	unlink(STATUS_FIFO);
 	if (mkfifo(STATUS_FIFO, 0666) && errno != EEXIST) {
@@ -68,13 +68,13 @@ void status_publisher_send(const char *json) {
     write(fd, json, strlen(json));
     write(fd, "\n", 1);
     close(fd);
-}
+}*/
 
 // USART RX callback for KISS interface
-void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken) {
+/**void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken) {
 	extern csp_iface_t csp_if_kiss;
 	csp_kiss_rx(&csp_if_kiss, buf, len, pxTaskWoken);
-}
+}*/
 
 //---------------------------------------------------------------------------------------------
 const vmem_t vmem_map[] = {{0}};
@@ -182,7 +182,7 @@ int main(int argc, char * argv[]) {
 	csp_rdp_set_opt(6, 30000, 16000, 1, 8000, 3);
 
 	/* Forward declaration for my_usart_rx */
-	void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken);
+	//void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken);
 	
 	/**
 	 * KISS interface
@@ -196,12 +196,15 @@ int main(int argc, char * argv[]) {
 			csp_kiss_init(&csp_if_kiss, &csp_kiss_driver, usart_putc, usart_insert, kiss_name);
 			struct usart_conf conf = {.device = device, .baudrate = baud};
 			usart_init(&conf);
+			void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken) {
+				csp_kiss_rx(&csp_if_kiss, buf, len, pxTaskWoken);
+			}
 			usart_set_callback(my_usart_rx);
 		}
 
 	/* USART RX callback for KISS interface */
 	// Declaration only; definition moved outside main
-	void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken);
+	//void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken);
 	
 	/**
 	 * ZMQ interface
