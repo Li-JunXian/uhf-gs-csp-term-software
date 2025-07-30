@@ -39,7 +39,13 @@ class TelemetryServer:
                 dport  = hdr['dport']
                 sport  = hdr['sport']
                 length = hdr['length']
-                payload = conn.recv(length)
+                # read the full payload using recvn
+                payload = recvn(conn, length)
+                if payload is None:
+                    self.log.warning(f"Incomplete payload: expected {length} bytes, received fewer")
+                    break
+
+                # assemble packet dictionary and push into store
                 pkt = {
                     "timestamp": time.time(),
                     "src": src, "dst": dst,
@@ -47,7 +53,7 @@ class TelemetryServer:
                     "payload": payload.hex()
                 }
                 self.store.push(pkt)
-                self.log.info(f'Pkt {pkt}')
+                self.log.info(f"Pkt {pkt}")
                 
         except Exception as e:
             self.log.error(f'Telemetry server error: {e}')
