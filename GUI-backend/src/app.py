@@ -6,7 +6,7 @@ from config import STATUS_FIFO, CSP_HOST, CSP_PORT, POLLING_INTERVAL
 from state.datastore import TelemetryStore
 from gs_link.gs_status import GSStatusReader
 from gs_link.telemetry_server import TelemetryServer
-from command_client import CommandClient
+from gs_link.command_client import CommandClient
 
 app = Flask(__name__)
 socketio = SocketIO(app)
