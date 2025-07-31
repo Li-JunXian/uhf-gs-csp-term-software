@@ -1,6 +1,8 @@
 import socket, threading, struct, time, logging
 from config import GS_TM_PORT
-from utils.csp import unpack_header
+from utils.csp import parse_csp
+
+FRAME_SIZE = 256  # Set this to the correct frame size for your application
 
 def recvn(sock, n):
     data = b''
@@ -21,43 +23,15 @@ class TelemetryServer:
         t.start()
 
     def _run(self):
-        s = socket.socket()
-        s.bind((self.host, self.port))
-        s.listen(1)
-        self.log.info(f'Telemetry server listening @ {self.port}')
-        conn, addr = s.accept()
-        self.log.info(f'GS connected from {addr}')
-        try:
-            while True:
-                header = recvn(conn, 6)
-                if not header:
-                    break
-                hdr = unpack_header(header)
-                pri    = hdr['prio']
-                src    = hdr['src']
-                dst    = hdr['dst']
-                dport  = hdr['dport']
-                sport  = hdr['sport']
-                length = hdr['length']
-                # read the full payload using recvn
-                payload = recvn(conn, length)
-                if payload is None:
-                    self.log.warning(f"Incomplete payload: expected {length} bytes, received fewer")
-                    break
-
-                # assemble packet dictionary and push into store
-                pkt = {
-                    "timestamp": time.time(),
-                    "src": src, "dst": dst,
-                    "src_port": sport, "dst_port": dport,
-                    "payload": payload.hex()
-                }
-                self.store.push(pkt)
-                self.log.info(f"Pkt {pkt}")
-                
-        except Exception as e:
-            self.log.error(f'Telemetry server error: {e}')
-        finally:
-            conn.close()
-            s.close()
-            self.log.info('Telemetry server closed')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind((self.host, self.port))
+        sock.listen(1)
+        conn, _ = sock.accept()
+        while True:
+            # read exactly one full frame
+            frame = recvn(conn, FRAME_SIZE)
+            if frame is None:
+                break
+            pkt = parse_csp(frame)
+            pkt['timestamp'] = time.time()
+            self.store.push(pkt)

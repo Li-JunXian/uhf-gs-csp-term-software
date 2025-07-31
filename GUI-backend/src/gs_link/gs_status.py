@@ -26,8 +26,7 @@ class GSStatusReader:
             
             # FIFO opened, send initial status
             pkt = {"type": "gs_status", "event": "status_fifo_opened"}
-            asyncio.get_event_loop().call_soon_threadsafe(self.store.push, pkt)
-
+            
             while self.running:
                 line = fifo.readline()
                 if not line:
@@ -38,11 +37,11 @@ class GSStatusReader:
                     continue
                 try:
                     pkt = json.loads(line)
-                except json.JSONDecodeError as e:
-                    log.error(f"Malformed JSON in FIFO: {e} -- {line!r}")
+                except ValueError as e:
+                    log.error(f"Malformed JSON in FIFO: {e} -- {line!r}".format(e, line))
                     continue
 
                 # Append timestamp and push into the shared store
                 pkt["timestamp"] = time.time()
-                asyncio.get_event_loop().call_soon_threadsafe(self.store.push, pkt)
+                self.store.push(pkt)
                 log.debug(f"GS Status update: {pkt}")
