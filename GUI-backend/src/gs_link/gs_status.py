@@ -38,7 +38,7 @@ class GSStatusReader:
                 try:
                     pkt = json.loads(line)
                 except ValueError as e:
-                    log.error(f"Malformed JSON in FIFO: {e} -- {line!r}".format(e, line))
+                    log.error("Malformed JSON in FIFO: {0} -- {1!r}".format(e, line))
                     continue
 
                 # Append timestamp and push into the shared store

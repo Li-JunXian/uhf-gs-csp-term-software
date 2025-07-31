@@ -1,6 +1,6 @@
 import socket, threading, struct, time, logging
 from config import GS_TM_PORT
-from utils.csp import parse_csp
+from utils.csp import unpack_header
 
 FRAME_SIZE = 256  # Set this to the correct frame size for your application
 
@@ -32,6 +32,6 @@ class TelemetryServer:
             frame = recvn(conn, FRAME_SIZE)
             if frame is None:
                 break
-            pkt = parse_csp(frame)
+            pkt = unpack_header(frame)
             pkt['timestamp'] = time.time()
             self.store.push(pkt)

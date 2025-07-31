@@ -11,10 +11,12 @@ from gs_link.command_client import CommandClient
 app = Flask(__name__)
 socketio = SocketIO(app)
 store = TelemetryStore()
+cmd_client = CommandClient(store)
+store.enqueue_command = store.push
 
 @app.route('/status')
 def get_status():
-    data = store.get_status()
+    data = store.get_latest_status()
     return jsonify(data)
 
 @app.route('/telemetry')
@@ -26,7 +28,8 @@ def get_telemetry():
 def post_command():
     command = request.json.get('command')
     if command:
-        CommandClient.send_command(command)
+        cmd_client.send(command)
+        # Record the command in the telemetry store
         store.enqueue_command(command)
         return jsonify({"result": "Command sent"})
 
@@ -42,7 +45,7 @@ def broadcast_continous():
 if __name__ == '__main__':
     GSStatusReader(store).start()
     TelemetryServer(store).start()
-    CommandClient(store).start()
+    cmd_client.start()
     
     socketio.start_background_task(broadcast_continous)
     socketio.run(app, host='0.0.0.0', port=8000)
