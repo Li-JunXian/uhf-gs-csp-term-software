@@ -44,4 +44,4 @@ class GSStatusReader:
                 # Append timestamp and push into the shared store
                 pkt["timestamp"] = time.time()
                 self.store.push(pkt)
-                log.debug(f"GS Status update: {pkt}")
+                log.debug("GS Status update: {0}".format(pkt))

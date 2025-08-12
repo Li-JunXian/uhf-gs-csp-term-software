@@ -1,3 +1,4 @@
+from typing import List
 import struct
 
 # ---------- KISS ----------
@@ -17,8 +18,7 @@ def kiss_escape(payload: bytes) -> bytes:
 def kiss_frame(data: bytes) -> bytes:
     return bytes([FEND, 0x00]) + kiss_escape(data) + bytes([FEND])
 
-def kiss_deframe(stream: bytearray) -> list[bytes]:
-    """Consume *stream* in-place; return list of whole DATA frames found."""
+def kiss_deframe(stream: bytearray) -> List[bytes]:
     frames, in_frame, esc = [], bytearray(), False
     while stream:
         b = stream.pop(0)

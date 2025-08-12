@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 
 #include "status_publisher.h"
+#include "crc16.h"
 
 
 #define DEBUG 0
