@@ -1,4 +1,4 @@
-STATUS_FIFO = "/tmp/gs_status_fifo"
+STATUS_FIFO = "/tmp/gs-status-fifo"
 
 API_HOST = "0.0.0.0"
 API_PORT = 8000

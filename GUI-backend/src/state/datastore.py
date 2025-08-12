@@ -1,25 +1,40 @@
 import threading
 import queue
-from collections import deque
-from typing import Any, Dict, List
-class TelemetryStore:
-    def __init__(self):
-        self._lock = threading.Lock()
-        self._data = {}
-        self._event_q = queue.Queue()
+from collections import defaultdict, deque
 
-    def push(self, pkt):
+class TelemetryStore(object):
+  
+    def __init__(self, hist_len=1000):
+        self._lock = threading.Lock()
+        self._latest = {}                                  # topic -> last envelope
+        self._hist   = defaultdict(lambda: deque(maxlen=hist_len))
+        self._event_q = queue.Queue()                      # (topic, envelope) for WS
+
+    def push(self, typed_pkt):
+        # typed_pkt is a dict with exactly one item: {topic: envelope}
+        topic, env = next(iter(typed_pkt.items()))
         with self._lock:
-            self._data.update(pkt)
-        self._event_q.put(pkt)
+            self._latest[topic] = env
+            self._hist[topic].append(env)
+        self._event_q.put((topic, env))
 
     def get_latest(self):
         with self._lock:
-            return dict(self._data)
-    
+            return dict(self._latest)
+
+    # Legacy helpers used by your existing routes:
     def get_latest_status(self):
-        return self.get_latest().get('gs_status', {})
-    
+        env = self._latest.get('gs_status')
+        return env.get('data', {}) if env else {}
+
     def get_latest_telemetry(self):
-        return self.get_latest().get('telemetry', {})
-    
+        env = self._latest.get('telemetry')
+        return env.get('data', {}) if env else {}
+
+    # Generic helpers (handy for new REST endpoints / GUI):
+    def get_topic(self, topic):
+        return self._latest.get(topic, {})
+
+    def get_history(self, topic, n=200):
+        with self._lock:
+            return list(self._hist[topic])[-n:]

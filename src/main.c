@@ -244,7 +244,7 @@ int main(int argc, char * argv[]) {
 	);
 	
 	// Publish initial mode:
-    	status_publisher_send(
+    status_publisher_send(
 		"{"
 		"\"type\":\"gs_mode\","
 		"\"mode\":\"Idle\""

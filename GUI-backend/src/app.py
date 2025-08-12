@@ -23,6 +23,19 @@ def get_telemetry():
     data = store.get_latest_telemetry()
     return jsonify(data)
 
+@app.route('/latest/<topic>')
+def latest_topic(topic):
+    env = store.get_topic(topic)
+    return jsonify(env or {})
+
+@app.route('/history/<topic>')
+def history_topic(topic):
+    try:
+        n = int(request.args.get('n', 200))
+    except Exception:
+        n = 200
+    return jsonify(store.get_history(topic, n))
+
 @app.route('/command', methods=['POST'])
 def post_command():
     payload = request.json.get('command')
@@ -39,13 +52,9 @@ def post_command():
     return jsonify({"result": "queued"})
 
 def broadcast_continuous():
-    last = None
     while True:
-        pkt = store.get_latest()
-        if pkt != last:
-            socketio.emit('update', pkt)
-            last = pkt
-        time.sleep(POLLING_INTERVAL)
+        topic, env = store._event_q.get()
+        socketio.emit('update', {'topic': topic, 'event': env})
 
 if __name__ == '__main__':
     print("Starting Flask/SocketIO on {}:{}".format(API_HOST, API_PORT))

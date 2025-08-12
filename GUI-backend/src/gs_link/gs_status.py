@@ -1,46 +1,48 @@
-import os, threading, time, json, asyncio
-from config import STATUS_FIFO    # define "/tmp/gs_status_fifo" here
-import logging
-from state.datastore import TelemetryStore
+import os, json, time, logging, threading
 
-log = logging.getLogger('GS-Status')
+from config import STATUS_FIFO
 
-# This module reads JSON status updates from a FIFO file and pushes them into the shared store.
-class GSStatusReader:
-    def __init__(self, store: TelemetryStore) -> None:
-        self.running = True
+class GSStatusReader(object):
+    def __init__(self, store):
         self.store = store
+        self.log = logging.getLogger('GS-Status')
 
     def start(self):
         threading.Thread(target=self._run, name='GS-Status', daemon=True).start()
 
-    # Signal the reader thread to stop.
-    def stop(self):
-        self.running = False
-
     def _run(self):
-        if not os.path.exists(STATUS_FIFO):
-            os.mkfifo(STATUS_FIFO, 0o666)
-        with open(STATUS_FIFO, "r") as fifo:
-            
-            # FIFO opened, send initial status
-            pkt = {"type": "gs_status", "event": "status_fifo_opened"}
-            
-            while self.running:
-                line = fifo.readline()
-                if not line:
-                    time.sleep(0.1)
-                    continue
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    pkt = json.loads(line)
-                except ValueError as e:
-                    log.error("Malformed JSON in FIFO: {0} -- {1!r}".format(e, line))
-                    continue
+        while True:
+            try:
+                if not os.path.exists(STATUS_FIFO):
+                    try:
+                        os.mkfifo(STATUS_FIFO)
+                    except OSError:
+                        pass
+                with open(STATUS_FIFO, 'r') as f:
+                    self.log.info('Reading GS status from %s', STATUS_FIFO)
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            pkt = json.loads(line)
+                        except ValueError:
+                            self.log.warning('Ignoring corrupt JSON: %r', line)
+                            continue
 
-                # Append timestamp and push into the shared store
-                pkt["timestamp"] = time.time()
-                self.store.push(pkt)
-                log.debug("GS Status update: {0}".format(pkt))
+                        # If already enveloped, route by type; else wrap as gs_status
+                        if isinstance(pkt, dict) and 'type' in pkt and 'data' in pkt:
+                            if 'ts' not in pkt:
+                                pkt['ts'] = time.time()
+                            topic = pkt['type']
+                            self.store.push({topic: pkt})
+                        else:
+                            env = {
+                                'type': 'gs_status',
+                                'ts': time.time(),
+                                'data': pkt
+                            }
+                            self.store.push({'gs_status': env})
+            except Exception as e:
+                self.log.warning('FIFO read error (%r); retrying in 0.5s', e)
+                time.sleep(0.5)
