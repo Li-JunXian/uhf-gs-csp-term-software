@@ -12,8 +12,7 @@ class GSStatusReader:
         self.store = store
 
     def start(self):
-        t = threading.Thread(target=self._run, daemon=True)
-        t.start()
+        threading.Thread(target=self._run, name='GS-Status', daemon=True).start()
 
     # Signal the reader thread to stop.
     def stop(self):

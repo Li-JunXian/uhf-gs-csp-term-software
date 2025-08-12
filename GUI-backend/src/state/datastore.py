@@ -15,7 +15,7 @@ class TelemetryStore:
 
     def get_latest(self):
         with self._lock:
-            return self._data.copy()
+            return dict(self._data)
     
     def get_latest_status(self):
         return self.get_latest().get('gs_status', {})

@@ -9,7 +9,7 @@ from gs_link.telemetry_server import TelemetryServer
 from gs_link.command_client import CommandClient
 
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode='eventlet')
+socketio = SocketIO(app, async_mode='threading')
 store = TelemetryStore()
 cmd_client = CommandClient(store)
 
@@ -55,4 +55,4 @@ if __name__ == '__main__':
     cmd_client.start()
     
     socketio.start_background_task(broadcast_continuous)
-    socketio.run(app, host=API_HOST, port=API_PORT)
+    socketio.run(app, host=API_HOST, port=API_PORT, debug=False, use_reloader=False)

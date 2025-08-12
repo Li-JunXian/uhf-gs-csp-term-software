@@ -1,37 +1,54 @@
-import socket, threading, struct, time, logging
+import socket, threading, time, logging
 from config import GS_TM_PORT
 from utils.csp import unpack_header
 
-FRAME_SIZE = 256  # Set this to the correct frame size for your application
+FRAME_SIZE = 256
 
 def recvn(sock, n):
     data = b''
     while len(data) < n:
-        packet = sock.recv(n - len(data))
-        if not packet:
+        chunk = sock.recv(n - len(data))
+        if not chunk:
             return None
-        data += packet
+        data += chunk
     return data
 
-class TelemetryServer:
-    def __init__(self, store, host='0.0.0.0', port=GS_TM_PORT):
-        self.store, self.host, self.port = store, host, port
-        self.log = logging.getLogger('TM-Server')
+class TelemetryServer(object):
+    def __init__(self, store, host='127.0.0.1', port=GS_TM_PORT):
+        self.store = store
+        self.host = host
+        self.port = port
+        self.log = logging.getLogger('TelemetryServer')
 
     def start(self):
-        t = threading.Thread(target=self._run, daemon=True)
+        t = threading.Thread(target=self._run, name='TelemetryServer', daemon=True)
         t.start()
 
     def _run(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind((self.host, self.port))
-        sock.listen(1)
-        conn, _ = sock.accept()
+        srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        srv.bind((self.host, self.port))
+        srv.listen(1)
+        self.log.info('Listening on %s:%d', self.host, self.port)
+
         while True:
-            # read exactly one full frame
-            frame = recvn(conn, FRAME_SIZE)
-            if frame is None:
-                break
-            pkt = unpack_header(frame)
-            pkt['timestamp'] = time.time()
-            self.store.push(pkt)
+            try:
+                conn, addr = srv.accept()
+                self.log.info('TM client connected from %s:%s', addr[0], addr[1])
+                while True:
+                    frame = recvn(conn, FRAME_SIZE)
+                    if frame is None:
+                        break
+                    pkt = unpack_header(frame)
+                    pkt['timestamp'] = time.time()
+                    # tag so your store can disambiguate
+                    self.store.push({'telemetry': pkt})
+            except Exception as e:
+                self.log.warning('TM link dropped: %r', e)
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                time.sleep(0.5)
+                continue
+            
