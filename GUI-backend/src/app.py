@@ -1,18 +1,17 @@
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO
-import threading, time
+import threading, time, logging
 
-from config import STATUS_FIFO, CSP_HOST, CSP_PORT, POLLING_INTERVAL
+from config import STATUS_FIFO, CSP_HOST, CSP_PORT, POLLING_INTERVAL, API_HOST, API_PORT, LOG_LEVEL
 from state.datastore import TelemetryStore
 from gs_link.gs_status import GSStatusReader
 from gs_link.telemetry_server import TelemetryServer
 from gs_link.command_client import CommandClient
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet')
 store = TelemetryStore()
 cmd_client = CommandClient(store)
-store.enqueue_command = store.push
 
 @app.route('/status')
 def get_status():
@@ -26,14 +25,20 @@ def get_telemetry():
 
 @app.route('/command', methods=['POST'])
 def post_command():
-    command = request.json.get('command')
-    if command:
-        cmd_client.send(command)
-        # Record the command in the telemetry store
-        store.enqueue_command(command)
-        return jsonify({"result": "Command sent"})
+    payload = request.json.get('command')
+    if not payload:
+        return jsonify({"error": "missing 'command'"}), 400
+    # Ensure bytes for CommandClient.send(...)
+    try:
+        raw = payload.encode('ascii')
+    except Exception:
+        raw = payload.encode('utf-8')
+    cmd_client.send(raw)
+    # Record the command event in the store for UI/WS
+    store.push({"type": "command", "value": payload, "timestamp": time.time()})
+    return jsonify({"result": "queued"})
 
-def broadcast_continous():
+def broadcast_continuous():
     last = None
     while True:
         pkt = store.get_latest()
@@ -43,9 +48,11 @@ def broadcast_continous():
         time.sleep(POLLING_INTERVAL)
 
 if __name__ == '__main__':
+    print("Starting Flask/SocketIO on {}:{}".format(API_HOST, API_PORT))
+    logging.getLogger().setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
     GSStatusReader(store).start()
     TelemetryServer(store).start()
     cmd_client.start()
     
-    socketio.start_background_task(broadcast_continous)
-    socketio.run(app, host='0.0.0.0', port=8000)
+    socketio.start_background_task(broadcast_continuous)
+    socketio.run(app, host=API_HOST, port=API_PORT)
