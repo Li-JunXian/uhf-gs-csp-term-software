@@ -22,14 +22,23 @@ class TelemetryStore(object):
         with self._lock:
             return dict(self._latest)
 
-    # Legacy helpers used by your existing routes:
-    def get_latest_status(self):
-        env = self._latest.get('gs_status')
-        return env.get('data', {}) if env else {}
+def get_latest_status(self):
+    env = self._latest.get('gs_status')
+    if not env:
+        return {}
+    # envelope path
+    if isinstance(env, dict) and 'data' in env:
+        return env['data']
+    # legacy/raw dict path
+    return env
 
-    def get_latest_telemetry(self):
-        env = self._latest.get('telemetry')
-        return env.get('data', {}) if env else {}
+def get_latest_telemetry(self):
+    env = self._latest.get('telemetry')
+    if not env:
+        return {}
+    if isinstance(env, dict) and 'data' in env:
+        return env['data']
+    return env
 
     # Generic helpers (handy for new REST endpoints / GUI):
     def get_topic(self, topic):

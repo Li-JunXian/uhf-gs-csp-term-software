@@ -38,26 +38,37 @@ def kiss_deframe(stream: bytearray) -> List[bytes]:
             in_frame.append(b)
     return frames
 
-# ---------- CSP header (6-byte disk format) ----------
-def unpack_header(h: bytes) -> dict:
-    """Return dict with prio, src, dst, dport, sport, length, flag."""
-    if len(h) != 7:
-        raise ValueError("expect 7-byte header")
-    id_lo2 = h[0] | (h[1] << 8)
-    prio  = (id_lo2 >> 13) & 0x07          # top 3 bits
-    src   = (id_lo2 >> 8)  & 0x1F
-    dst   =  id_lo2        & 0x1F
-    dport = h[2] >> 2
-    sport = ((h[2] & 0x03) << 4) | (h[3] >> 4)
-    length = (h[4] << 8) | h[5]
-    # extract new flag field
-    flag = h[6]
-    return dict(
-        prio=prio,
-        src=src,
-        dst=dst,
-        dport=dport,
-        sport=sport,
-        length=length,
-        flag=flag
-    )
+#def unpack_header(frame):
+    """
+    Robust CSP header unpacker.
+    Accepts full frames and slices the first 7 or 8 bytes as header.
+    Returns a dict and sets '_header_len' to where payload starts.
+    """
+    b = bytearray(frame)
+    if len(b) < 7:
+        raise ValueError("need >=7 bytes for header")
+
+    prio  = (b[0] >> 5) & 0x07
+    src   = b[0] & 0x1F
+    dst   = b[1]
+    sport = b[2]
+    dport = b[3]
+    length = ((b[4] << 8) | b[5]) & 0xFFFF
+
+    if len(b) >= 8:
+        flags = ((b[6] << 8) | b[7]) & 0xFFFF
+        header_len = 8
+    else:
+        flags = b[6] & 0xFF
+        header_len = 7
+
+    return {
+        'prio': prio,
+        'src': src,
+        'dst': dst,
+        'sport': sport,
+        'dport': dport,
+        'length': length,
+        'flags': flags,
+        '_header_len': header_len
+    }

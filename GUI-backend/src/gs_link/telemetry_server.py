@@ -1,8 +1,8 @@
 import socket, threading, time, logging
-from config import CSP_HOST, GS_TM_PORT
+from config import CSP_HOST, CSP_PORT
 from utils.csp import unpack_header
 
-FRAME_SIZE = 256  # adjust if your GS sends variable frames
+FRAME_SIZE = 256  # keep this unless you switch to variable-length reads
 
 def recvn(conn, n):
     data = b''
@@ -14,7 +14,7 @@ def recvn(conn, n):
     return data
 
 class TelemetryServer(object):
-    def __init__(self, store, host=CSP_HOST, port=GS_TM_PORT):
+    def __init__(self, store, host=CSP_HOST, port=CSP_PORT):
         self.store = store
         self.host = host
         self.port = port
@@ -39,8 +39,24 @@ class TelemetryServer(object):
                     frame = recvn(conn, FRAME_SIZE)
                     if frame is None:
                         break
-                    hdr = unpack_header(frame)  # dict of header fields you define
-                    env = {'type': 'telemetry', 'ts': time.time(), 'data': hdr}
+                    hdr = unpack_header(frame)
+                    payload = frame[hdr.get('_header_len', 0):]
+                    # hex for JSON safety on Py3.5
+                    if hasattr(payload, 'hex'):
+                        payload_hex = payload.hex()
+                    else:
+                        payload_hex = ''.join('{:02x}'.format(b) for b in payload)
+
+                    env = {
+                        'type': 'telemetry',
+                        'ts': time.time(),
+                        'data': dict(hdr, payload=payload_hex, length=len(payload))
+                    }
                     self.store.push({'telemetry': env})
+            except Exception as e:
+                self.log.warning('TM link error: %r', e)
             finally:
-                conn.close()
+                try:
+                    conn.close()
+                except Exception:
+                    pass

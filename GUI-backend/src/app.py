@@ -159,7 +159,6 @@ if __name__ == '__main__':
     logging.getLogger().setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
     GSStatusReader(store).start()
     TelemetryServer(store).start()
-    cmd_client.start()
     
     socketio.start_background_task(broadcast_continuous)
     socketio.run(app, host=API_HOST, port=API_PORT, debug=False, use_reloader=False)
