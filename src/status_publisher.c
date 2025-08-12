@@ -2,11 +2,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define FIFO "/tmp/gs_status_fifo"
+#define FIFO "/tmp/gs-status-fifo"
 
 void status_publisher_init(void) {
     unlink(FIFO);
@@ -16,17 +17,25 @@ void status_publisher_init(void) {
     }
 }
 
-void status_publisher_send(const char *json) {
-    int fd;
-    
-    for (int i = 0; i < 5; i++) {
-        fd = open(FIFO, O_WRONLY | O_NONBLOCK);
-        if (fd >= 0) break; // Successfully opened FIFO
-        if (errno != ENXIO && errno != EAGAIN) { return; }
-        usleep(100000); // Wait for 100ms before retrying
+static int write_all(int fd, const char *buf, size_t len) {
+    size_t off = 0;
+    while (off < len) {
+        ssize_t n = write(fd, buf + off, len - off);
+        if (n > 0) { off += (size_t)n; continue; }
+        if (n < 0 && errno == EINTR) continue;
+        return -1;
     }
-    if (fd < 0) return;           // no reader yet
-    write(fd, json, strlen(json));
-    write(fd, "\n", 1);
+    return 0;
+}
+
+void status_publisher_send(const char *json) {
+    int fd = -1;
+    for (int i = 0; i < 5 && fd < 0; i++) {
+        fd = open(FIFO, O_WRONLY | O_NONBLOCK);
+        if (fd < 0 && (errno == ENXIO || errno == EAGAIN)) usleep(100000);
+        else if (fd < 0) return;
+    }
+    if (fd < 0) return;
+    if (write_all(fd, json, strlen(json)) == 0) write_all(fd, "\n", 1);
     close(fd);
 }

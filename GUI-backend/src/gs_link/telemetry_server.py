@@ -1,54 +1,46 @@
 import socket, threading, time, logging
-from config import GS_TM_PORT
+from config import CSP_HOST, GS_TM_PORT
 from utils.csp import unpack_header
 
-FRAME_SIZE = 256
+FRAME_SIZE = 256  # adjust if your GS sends variable frames
 
-def recvn(sock, n):
+def recvn(conn, n):
     data = b''
     while len(data) < n:
-        chunk = sock.recv(n - len(data))
+        chunk = conn.recv(n - len(data))
         if not chunk:
             return None
         data += chunk
     return data
 
 class TelemetryServer(object):
-    def __init__(self, store, host='127.0.0.1', port=GS_TM_PORT):
+    def __init__(self, store, host=CSP_HOST, port=GS_TM_PORT):
         self.store = store
         self.host = host
         self.port = port
-        self.log = logging.getLogger('TelemetryServer')
+        self.log = logging.getLogger('TM-Server')
 
     def start(self):
-        t = threading.Thread(target=self._run, name='TelemetryServer', daemon=True)
+        t = threading.Thread(target=self._run)
+        t.daemon = True
         t.start()
 
     def _run(self):
-        srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        srv.bind((self.host, self.port))
-        srv.listen(1)
-        self.log.info('Listening on %s:%d', self.host, self.port)
-
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind((self.host, self.port))
+        s.listen(1)
+        self.log.info('Telemetry listening on %s:%s', self.host, self.port)
         while True:
+            conn, addr = s.accept()
+            self.log.info('Telemetry connection from %s', addr[0])
             try:
-                conn, addr = srv.accept()
-                self.log.info('TM client connected from %s:%s', addr[0], addr[1])
                 while True:
                     frame = recvn(conn, FRAME_SIZE)
                     if frame is None:
                         break
-                    pkt = unpack_header(frame)
-                    pkt['timestamp'] = time.time()
-                    # tag so your store can disambiguate
-                    self.store.push({'telemetry': pkt})
-            except Exception as e:
-                self.log.warning('TM link dropped: %r', e)
-                try:
-                    conn.close()
-                except Exception:
-                    pass
-                time.sleep(0.5)
-                continue
-            
+                    hdr = unpack_header(frame)  # dict of header fields you define
+                    env = {'type': 'telemetry', 'ts': time.time(), 'data': hdr}
+                    self.store.push({'telemetry': env})
+            finally:
+                conn.close()
