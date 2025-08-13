@@ -38,7 +38,7 @@ def kiss_deframe(stream: bytearray) -> List[bytes]:
             in_frame.append(b)
     return frames
 
-#def unpack_header(frame):
+def unpack_header(frame):
     """
     Robust CSP header unpacker.
     Accepts full frames and slices the first 7 or 8 bytes as header.

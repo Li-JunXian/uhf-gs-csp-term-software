@@ -52,10 +52,9 @@ class GSStatusReader(object):
                     self.store.push({topic: env})
                     # additionally keep a leaf for the classic /status route
                     if topic == 'gs_status':
-                        self.store.push({'gs_status': pkt['data']})
+                        self.store.push({'gs_status': env})
                 else:
                     # Legacy plain object => treat as gs_status leaf + envelope
                     env = {"type": "gs_status", "ts": ts, "data": pkt}
-                    self.store.push({'gs_status': pkt, 'gs_status_env': env})
-                self.log.debug("GS Status update pushed")
+                    self.store.push({'gs_status': env})
                 
