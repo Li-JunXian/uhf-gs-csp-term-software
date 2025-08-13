@@ -39,11 +39,6 @@ def kiss_deframe(stream: bytearray) -> List[bytes]:
     return frames
 
 def unpack_header(frame):
-    """
-    Robust CSP header unpacker.
-    Accepts full frames and slices the first 7 or 8 bytes as header.
-    Returns a dict and sets '_header_len' to where payload starts.
-    """
     b = bytearray(frame)
     if len(b) < 7:
         raise ValueError("need >=7 bytes for header")
@@ -63,12 +58,8 @@ def unpack_header(frame):
         header_len = 7
 
     return {
-        'prio': prio,
-        'src': src,
-        'dst': dst,
-        'sport': sport,
-        'dport': dport,
-        'length': length,
-        'flags': flags,
+        'prio': prio, 'src': src, 'dst': dst,
+        'sport': sport, 'dport': dport,
+        'length': length, 'flags': flags,
         '_header_len': header_len
     }
