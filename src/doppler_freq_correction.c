@@ -68,7 +68,7 @@ static int TXfreq = 0;
 static int RXfreq = 0;
 static uint32_t sat_no = 1;	// Initialisation tracking Lumelite 1
 
-
+static void doppler_tracking(int txfreq, int rxfreq, uint32_t tnow);
 int mcs_sat_sel(uint32_t sat_no_sel);
 int ping_sat_func(void);
 

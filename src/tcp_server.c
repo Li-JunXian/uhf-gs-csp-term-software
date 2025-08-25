@@ -30,6 +30,7 @@
 
 #include "send_packet.h"
 #include "doppler_freq_correction.h"
+#include "status_publisher.h"
  
 #define LENGTH 512
 #define MCS_PORT 1028
@@ -136,6 +137,13 @@ void tcp_server(void)
                         			printf("[TCP Server] Connection Established from %s (MCS Client)\n", inet_ntoa(addr_remote.sin_addr));
 						memset(client_addr,0,20);
 						strcpy(client_addr, inet_ntoa(addr_remote.sin_addr));
+						{
+						    char ack_buf[256];
+						    snprintf(ack_buf, sizeof(ack_buf),
+							     "{\"type\":\"cmd_ack\",\"ts\":%ld,\"data\":{\"event\":\"connect\",\"peer\":\"%s\"}}",
+							     (long) time(NULL), client_addr);
+						    status_publisher_send(ack_buf);
+						}
                     			}
 				} else {
 					/* Handle data sent from MCS */
@@ -145,8 +153,22 @@ void tcp_server(void)
                         			if (nbytes == 0) {
                             				/* connection closed by MCS*/
                             				printf("Connection %d terminated by MCS\n", i);
+                            				{
+                            				    char ack_buf[256];
+                            				    snprintf(ack_buf, sizeof(ack_buf),
+                            					     "{\"type\":\"cmd_ack\",\"ts\":%ld,\"data\":{\"event\":\"disconnect\",\"peer\":\"%s\"}}",
+                            					     (long) time(NULL), client_addr);
+                            				    status_publisher_send(ack_buf);
+                            				}
                         			} else {
                             				log_error("Failure in recv() function, connection terminated...");
+                            				{
+                            				    char err_buf[256];
+                            				    snprintf(err_buf, sizeof(err_buf),
+                            					     "{\"type\":\"error\",\"ts\":%ld,\"data\":{\"component\":\"tcp_server\",\"message\":\"recv_failed\"}}",
+                            					     (long) time(NULL));
+                            				    status_publisher_send(err_buf);
+                            				}
                         			}
                         			close(i);
                         			FD_CLR(i, &master); // remove fd from master set
@@ -174,6 +196,13 @@ void tcp_server(void)
 						fclose(fr);
 
 						send_packet(fr_name);
+						{
+						    char ack_buf[512];
+						    snprintf(ack_buf, sizeof(ack_buf),
+							     "{\"type\":\"cmd_ack\",\"ts\":%ld,\"data\":{\"event\":\"uplink_received\",\"bytes\":%d,\"file\":\"%s\",\"peer\":\"%s\"}}",
+							     (long) time(NULL), nbytes, fr_name, client_addr);
+						    status_publisher_send(ack_buf);
+						}
 					}
                                 }
 			}

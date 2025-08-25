@@ -28,6 +28,8 @@
 #include <sys/stat.h>
 
 #include "status_publisher.h"
+#include "crc16.h"
+
 
 #define DEBUG 0
 
@@ -44,13 +46,25 @@ void receive_packet(csp_packet_t *packet)
 
 	printf("Receiving Packet Data from Satellite at %s\r\n",get_time(time_string_recv));
 	
-	/*
+/*
 	if(csp_crc32_verify(packet, 1)==-1) {
 		printf("crc failed to verify\r\n");
 	} else {
 		printf("crc verified successfully\r\n");
 	}
 	*/
+	// --- new: verify CRC of packet payload ---
+	uint16_t computed_crc = crc16(packet->data, packet->length - 2);
+	// Assuming the CRC is stored at the end of the packet data
+	uint16_t received_crc = 0;
+	if (packet->length >= 2) {
+		received_crc = (packet->data[packet->length - 2] << 8) | packet->data[packet->length - 1];
+	}
+	if (computed_crc != received_crc) {
+		fprintf(stderr, "CRC mismatch: got 0x%04X, expected 0x%04X\n",
+				received_crc, computed_crc);
+		return;   // drop bad frame
+	}
 	
 	/* get the csp packet headers, require the AX100 using csp_connect() function */
 	csp_conn_get_header_values(header_values);

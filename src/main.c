@@ -46,14 +46,13 @@
 #include <command/command.h>
 
 #include <errno.h>
-
 #include "status_publisher.h"
 
 /* Path to FIFO */
 #define STATUS_FIFO "/tmp/gs-status-fifo"
 
 /* Call once at startup: */
-void status_publisher_init() {
+/**void status_publisher_init() {
 	// create (or re-create) the FIFO, 0666 so any user can read
 	unlink(STATUS_FIFO);
 	if (mkfifo(STATUS_FIFO, 0666) && errno != EEXIST) {
@@ -69,13 +68,13 @@ void status_publisher_send(const char *json) {
     write(fd, json, strlen(json));
     write(fd, "\n", 1);
     close(fd);
-}
+}*/
 
 // USART RX callback for KISS interface
-void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken) {
+/**void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken) {
 	extern csp_iface_t csp_if_kiss;
 	csp_kiss_rx(&csp_if_kiss, buf, len, pxTaskWoken);
-}
+}*/
 
 //---------------------------------------------------------------------------------------------
 const vmem_t vmem_map[] = {{0}};
@@ -183,7 +182,7 @@ int main(int argc, char * argv[]) {
 	csp_rdp_set_opt(6, 30000, 16000, 1, 8000, 3);
 
 	/* Forward declaration for my_usart_rx */
-	void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken);
+	//void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken);
 	
 	/**
 	 * KISS interface
@@ -197,12 +196,15 @@ int main(int argc, char * argv[]) {
 			csp_kiss_init(&csp_if_kiss, &csp_kiss_driver, usart_putc, usart_insert, kiss_name);
 			struct usart_conf conf = {.device = device, .baudrate = baud};
 			usart_init(&conf);
+			void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken) {
+				csp_kiss_rx(&csp_if_kiss, buf, len, pxTaskWoken);
+			}
 			usart_set_callback(my_usart_rx);
 		}
 
 	/* USART RX callback for KISS interface */
 	// Declaration only; definition moved outside main
-	void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken);
+	//void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken);
 	
 	/**
 	 * ZMQ interface
@@ -229,20 +231,20 @@ int main(int argc, char * argv[]) {
 	/* Call once at startup: */
     	status_publisher_init();
 
-    	// Publish static info once:
-    	status_publisher_send(
+	// Publish static info once:
+	status_publisher_send(
 		"{"
 		"\"type\":\"gs_info\","
 		"\"gs_name\":\"LumeliteGS\","
 		"\"lat\":1.3456,"
 		"\"lon\":103.6789,"
 		"\"alt\":15.0,"
-        	"\"true_north_offset\":80"
+		"\"true_north_offset\":80"
 		"}"
 	);
 	
 	// Publish initial mode:
-    status_publisher_send(
+    	status_publisher_send(
 		"{"
 		"\"type\":\"gs_mode\","
 		"\"mode\":\"Idle\""
@@ -286,7 +288,7 @@ int main(int argc, char * argv[]) {
 	/* Wait here for console to end */
 	pthread_join(handle_console, NULL);
 	pthread_join(handle_server, NULL);
-	pthread_join(handle_doppler, NULL);					// (Disable antenna tracking)
+	pthread_join(handle_doppler, NULL);						// (Disable antenna tracking)
 	pthread_join(handle_tleupdate, NULL);					// (Disable antenna tracking)
 	pthread_join(handle_tcp, NULL);
 

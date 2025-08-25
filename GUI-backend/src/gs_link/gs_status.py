@@ -1,47 +1,60 @@
-import os, threading, time, json, asyncio
-from config import STATUS_FIFO    # define "/tmp/gs_status_fifo" here
-import logging
-from state.datastore import TelemetryStore
+import os, json, time, logging, threading
 
-log = logging.getLogger('GS-Status')
+from config import STATUS_FIFO
 
-# This module reads JSON status updates from a FIFO file and pushes them into the shared store.
-class GSStatusReader:
-    def __init__(self, store: TelemetryStore) -> None:
-        self.running = True
+class GSStatusReader(object):
+    def __init__(self, store):
         self.store = store
+        self.log = logging.getLogger('GS-Status')
 
     def start(self):
-        t = threading.Thread(target=self._run, daemon=True)
+        threading.Thread(target=self._run, name='GS-Status', daemon=True).start()
+
+    def __init__(self, store):
+        self.running = True
+        self.store = store
+        self.log = logging.getLogger('GS-Status')
+
+    def start(self):
+        t = threading.Thread(target=self._run)
+        t.daemon = True
         t.start()
 
-    # Signal the reader thread to stop.
-    def stop(self):
-        self.running = False
-
     def _run(self):
+        # Ensure FIFO exists
         if not os.path.exists(STATUS_FIFO):
-            os.mkfifo(STATUS_FIFO, 0o666)
-        with open(STATUS_FIFO, "r") as fifo:
-            
-            # FIFO opened, send initial status
-            pkt = {"type": "gs_status", "event": "status_fifo_opened"}
-            asyncio.get_event_loop().call_soon_threadsafe(self.store.push, pkt)
+            try:
+                os.mkfifo(STATUS_FIFO, 0o666)
+            except OSError:
+                pass
 
+        with open(STATUS_FIFO, "r") as fifo:
             while self.running:
                 line = fifo.readline()
                 if not line:
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                     continue
                 line = line.strip()
                 if not line:
                     continue
                 try:
                     pkt = json.loads(line)
-                    pkt["timestamp"] = time.time()
-                    # push into the same store your TelemetryServer uses
-                    asyncio.get_event_loop().call_soon_threadsafe(self.store.push, pkt)
-                except json.JSONDecodeError as e:
-                    log.warning(f"Ignoring corrupt JSON from FIFO: {e!r} -- {line!r}")
+                except ValueError as e:
+                    self.log.error("Malformed JSON in FIFO: %s -- %r", e, line)
                     continue
-                log.debug(f"GS Status update: {pkt}")
+
+                ts = pkt.get('ts', time.time())
+                # Envelope from C: {"type": "<topic>", "ts": ..., "data": {...}}
+                if isinstance(pkt, dict) and 'type' in pkt and 'data' in pkt:
+                    topic = pkt['type']
+                    env = {"type": topic, "ts": ts, "data": pkt['data']}
+                    # store envelope as <topic>
+                    self.store.push({topic: env})
+                    # additionally keep a leaf for the classic /status route
+                    if topic == 'gs_status':
+                        self.store.push({'gs_status': env})
+                else:
+                    # Legacy plain object => treat as gs_status leaf + envelope
+                    env = {"type": "gs_status", "ts": ts, "data": pkt}
+                    self.store.push({'gs_status': env})
+                

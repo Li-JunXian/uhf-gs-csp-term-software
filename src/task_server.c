@@ -33,6 +33,7 @@
 #include <sys/stat.h>
 
 #include "receive_packet.h"
+#include "status_publisher.h"
 
 #define MY_PORT 15	//PORT added to listen for test traffic
 #define RE_PORT 16	//PORT added to send data when triggered
@@ -76,7 +77,14 @@ void * task_server(void * parameters) {
 		}
 
 		/* Print the csp header paramters in the csp packet send to GS100 */
-		//printf("Case 1 : csp_conn_dport(conn) is %d\r\n", csp_conn_dport(conn));
+		{
+		    char ack_buf[256];
+		    snprintf(ack_buf, sizeof(ack_buf),
+		             "{\"type\":\"cmd_ack\",\"ts\":%ld,\"data\":{\"event\":\"csp_accept\",\"src\":%u,\"dst\":%u,\"sport\":%u,\"dport\":%u}}",
+		             (long) time(NULL),
+		             csp_conn_src(conn), csp_conn_dst(conn), csp_conn_sport(conn), csp_conn_dport(conn));
+		    status_publisher_send(ack_buf);
+		}
 
 		/* Spawn new task for FTP */
 		if (csp_conn_dport(conn) == CSPTERM_PORT_FTP) {
@@ -99,19 +107,41 @@ void * task_server(void * parameters) {
 
 			switch(csp_conn_dport(conn)) {
 
-				case MY_PORT:	//PORT 15
+				case MY_PORT: {
+					unsigned int pkt_len = packet->length; // capture before receive_packet may consume/free
 					//printf("Downlink packet from Space\r\n");
-					receive_packet(packet);	// TM port
+					receive_packet(packet); // TM port
+					{
+						char tbuf[256];
+						snprintf(tbuf, sizeof(tbuf),
+						         "{\"type\":\"telemetry\",\"ts\":%ld,\"data\":{\"event\":\"downlink_received\",\"dport\":%d,\"len\":%u}}",
+						         (long) time(NULL), csp_conn_dport(conn), pkt_len);
+						status_publisher_send(tbuf);
+					}
 					csp_close(conn);
-				break;
+				} break;
 
-				case RE_PORT:	//PORT 16
+				case RE_PORT:
 					reply_data(conn, packet); // Reply port
+					{
+						char ack_buf[256];
+						snprintf(ack_buf, sizeof(ack_buf),
+						         "{\"type\":\"cmd_ack\",\"ts\":%ld,\"data\":{\"event\":\"uplink_request\",\"port\":%d}}",
+						         (long) time(NULL), RE_PORT);
+						status_publisher_send(ack_buf);
+					}
 					csp_close(conn);
 				break;
 
-				case PING_RX_PORT:	//PORT 17
+				case PING_RX_PORT:
 					Receive_data(conn, packet); // Ping receive port
+					{
+						char ack_buf[256];
+						snprintf(ack_buf, sizeof(ack_buf),
+						         "{\"type\":\"cmd_ack\",\"ts\":%ld,\"data\":{\"event\":\"ping_rx\",\"port\":%d}}",
+						         (long) time(NULL), PING_RX_PORT);
+						status_publisher_send(ack_buf);
+					}
 					csp_close(conn);
 				break;
 
@@ -180,7 +210,21 @@ void reply_data(csp_conn_t *conn, csp_packet_t *packet)
 		/* Send failed */
 		printf("Send failed\n");
 		csp_buffer_free(packet);
+		{
+		    char err_buf[256];
+		    snprintf(err_buf, sizeof(err_buf),
+		             "{\"type\":\"error\",\"ts\":%ld,\"data\":{\"component\":\"task_server\",\"message\":\"uplink_send_failed\"}}",
+		             (long) time(NULL));
+		    status_publisher_send(err_buf);
+		}
+		return;
 	}
 	printf("Reply sent.\r\n");
-
+	{
+	    char ack_buf[256];
+	    snprintf(ack_buf, sizeof(ack_buf),
+	             "{\"type\":\"cmd_ack\",\"ts\":%ld,\"data\":{\"event\":\"uplink_sent\",\"dst\":%d,\"dport\":%d,\"len\":%u}}",
+	             (long) time(NULL), DEST_ADDR, RE_DEST_PORT, packet->length);
+	    status_publisher_send(ack_buf);
+	}
 }
