@@ -1,14 +1,47 @@
-import { useState, useMemo, type ChangeEvent, type FormEvent } from "react";
+import { useState, useMemo, type ChangeEvent, type FormEvent, useEffect } from "react";
+import earthImg from "../assets/earth-day.jpg"
+import earthTop from "../assets/earth-topology.png"
+import nightSky from "../assets/night-sky.png"
 import "./App.css";
 import Header from "./Util/Header";
+import PopupMenu from "./Util/Popup";
 import Globe from "react-globe.gl";
+import { generateOrbit } from "./Util/Predictor"
 
+/**
+ * This type describes the location of a station and its name
+ */
 type labels = {
-  //this type is the data for stations!
   name: string;
   lat: number;
   lng: number;
 };
+
+/**
+ * This type describes a single position of a satellite
+ */
+type SatPos = {
+  lat : number, 
+  lng : number, 
+  altitude : number
+};
+
+/**
+ * This type describes the entire orbit of a satellite with its name, when its orbit was last updated and its entire path
+ */
+type SatStruct = {
+  name : string,
+  lastUpdate : Date
+  path : number[][]
+}
+
+/**
+ * This type describes the current position of a satellite
+ */
+type PartStruct = {
+  name : string,
+  point : number[]
+}
 
 interface FormProp {
   inputLat: number;
@@ -20,6 +53,22 @@ interface FormProp {
   handleLat: (e: ChangeEvent<HTMLInputElement>) => void;
   handleLong: (e: ChangeEvent<HTMLInputElement>) => void;
 }
+
+/**
+ * Dummy satellite data gotten from a website. In the future maybe use a JSON to store the TLE data when it is updated so
+ * that when the data is updated it will re render the program.
+ */
+const satellites = [{
+  name : "SCOOB-II",
+  lastUpdate : new Date(Date.now()),
+  TLE1 : "1 63211U 25052B   25237.20035185  .00010988  00000-0  47621-3 0  9999",
+  TLE2 : "2 63211  97.4291 130.4139 0006211  71.3692 288.8218 15.22533988 24904"
+}, {
+  name : "NUSHSat1",
+  lastUpdate : new Date(Date.now()),
+  TLE1 : "1 57484U 23109D   24006.48621913  .00017746  00000-0  90245-3 0  9997",
+  TLE2 : "2 57484   4.9510 145.7547 0005430 219.0242 140.9473 15.13763583 24325"
+}]
 
 const AddForm = ({
   inputLat,
@@ -68,6 +117,13 @@ const App = () => {
   const [inputName, setInputName] = useState<string>("");
   const [inputLat, setInputLat] = useState(0);
   const [inputLong, setInputLong] = useState(0);
+  const [hoveredPoint, setHoveredPoint] = useState<object | null>(null);
+  const [mousePos, setMousePos] = useState({x : 0, y : 0});
+  const [isPopped, setIsPopped] = useState(false);
+  const [clickedPoint, setClickedPoint] = useState("");
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [isMax, setIsMax] = useState(false);
+  
   const [lData, setLData] = useState<labels[]>([
     {
       name: "STAR E7",
@@ -90,43 +146,57 @@ const App = () => {
     e.preventDefault();
     let tempLabel: labels = { name: inputName, lat: inputLat, lng: inputLong };
     if (isAdding[2]) {
-      console.log(inputName);
-      console.log(inputLat);
-      console.log(inputLong);
       setLData([...lData, tempLabel]);
-      console.log(lData);
     }
+    console.log("satData", satData, Array.isArray(satData));
     setIsAdding([false, false, false]);
     setInputName("");
     setInputLat(0);
     setInputLong(0);
   };
 
-  const satData = useMemo(
-    () =>
-      [...Array(1).keys()].map(() => {
-        let lat = 1.29;
-        let lng = 103.77;
-        let alt = 0.5;
-
-        // let lat2 = 20;
-        // let lng2 = 20;
-        // let alt2 = 1;
-
-        return [
-          [lat, lng, alt],
-          ...[...Array(Math.round(359)).keys()].map(() => {
-            lat = lat;
-            lng = lng >= 180 ? 0 : lng + 1;
-            alt = Math.max(0, alt);
-
-            return [lat, lng, alt];
-          }),
-        ];
-      }),
-    []
+  useEffect(() => { //counter to update elapsedTime by 1 every minute
+    const minuteCounter = setInterval(() => {
+      setElapsedTime(elapsedTime => elapsedTime + 1);
+      if (elapsedTime == 96) {
+        setElapsedTime(0);
+        setIsMax(true);
+      } else if (isMax && elapsedTime < 96) {
+        setIsMax(false);
+      }
+    }, 60000);
+    return () => clearInterval(minuteCounter)
+  }, [])
+      
+  const satData = useMemo( //Variable that populates/repopulates itself with the coordinates of the orbit of a satellite
+    () => {
+      const data = satellites.map((satellite) => { 
+        return { 
+          name : satellite.name, 
+          lastUpdate : satellite.lastUpdate, 
+          path : generateOrbit(satellite.TLE1, satellite.TLE2) 
+        }
+      })
+      return data;
+    }, [satellites, isMax]
   );
-  console.log(satData);
+  
+  /**
+   * Uses the indexes of the orbit array to track the live location of the satellite based on the TLE generated orbit
+   * uses the timer above which updates elapsedTime to track which index to be on
+  */
+  const particlesData = useMemo( 
+    () => {
+      var data : PartStruct[] = satData.map((sat) => {
+        var temp = sat.path[elapsedTime]
+        console.log(temp);
+          return {
+            name : sat.name,
+            point : temp
+          }
+      })
+      return data;
+  }, [satellites, elapsedTime])
   return (
     <div className="content">
       <Header />
@@ -189,27 +259,54 @@ const App = () => {
           +
         </button>
       )}
-      <Globe
-        backgroundColor="#030a18"
-        backgroundImageUrl="//cdn.jsdelivr.net/npm/three-globe/example/img/night-sky.png"
-        bumpImageUrl={
-          "//cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png"
-        }
-        globeImageUrl="//cdn.jsdelivr.net/npm/three-globe/example/img/earth-day.jpg"
-        labelsData={lData}
-        labelLat={(d) => (d as labels).lat}
-        labelLng={(d) => (d as labels).lng}
-        labelText={(d) => (d as labels).name}
-        labelSize={1}
-        labelDotRadius={0.1}
-        pathsData={satData}
-        pathColor={() => ["rgba(0,0,255,0.6)", "rgba(255,0,0,0.6)"]}
-        pathDashLength={0.01}
-        pathDashGap={0.004}
-        pathDashAnimateTime={100000}
-        pathPointAlt={(pnt) => pnt[2]}
-        pathTransitionDuration={4000}
-      />
+      <div className="Globe" 
+        onClick={(e) => {
+          setMousePos({x : e.clientX, y: e.clientY})
+          if (isPopped) {
+            setIsPopped(false);
+          }
+        }}
+        >
+        <PopupMenu 
+          hoveredPoint={hoveredPoint as SatPos | null} 
+          mousePos={mousePos} 
+          isPopped={isPopped}
+          name={clickedPoint}
+          />
+        <Globe
+          backgroundColor="#030a18"
+          backgroundImageUrl={nightSky}
+          bumpImageUrl={earthTop}
+          globeImageUrl={earthImg}
+          labelsData={lData}
+          labelLat={(d) => (d as labels).lat}
+          labelLng={(d) => (d as labels).lng}
+          labelText={(d) => (d as labels).name}
+          labelSize={1}
+          labelDotRadius={0.1}
+          pathsData={satData}
+          pathLabel="name"
+          pathPoints="path"
+          pathColor={() => ["rgba(0,0,255,0.6)", "rgba(255,0,0,0.6)"]}
+          onPathClick={(path, event, coords) => {
+            setHoveredPoint(coords)
+            setClickedPoint((path as SatStruct).name);
+            setIsPopped(true);
+          }}
+          
+          pathDashLength={0.01}
+          pathDashGap={0.004}
+          pathDashAnimateTime={100000}
+          pathPointAlt={(pnt) => pnt[2]}
+          pathTransitionDuration={4000}
+          particlesData={particlesData}
+          particlesList={particlesData}
+          particleLat={(d) => (d as PartStruct).point[0]}
+          particleLng={(d) => (d as PartStruct).point[1]}
+          particleAltitude={(d) => (d as PartStruct).point[2]}
+          particlesSize={2}
+        />
+      </div>
     </div>
   );
 };

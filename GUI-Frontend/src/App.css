@@ -4,6 +4,17 @@ body {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
 }
 
+.content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.Globe {
+  flex: 1;
+  position: relative;
+}
+
 .content button {
   position: absolute;
   font-size: 1.2rem;

@@ -9,9 +9,14 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "hls.js": "^1.6.11",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-globe.gl": "^2.34.0"
+    "react-globe.gl": "^2.34.0",
+    "react-router": "^7.8.2",
+    "satellite.js": "^6.0.1"
   },
   "devDependencies": {
     "@rsbuild/core": "^1.4.2",

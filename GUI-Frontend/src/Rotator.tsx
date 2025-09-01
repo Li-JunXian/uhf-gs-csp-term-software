@@ -1,5 +1,23 @@
 import Header from "./Util/Header";
 
-export const Rotator = () => {
-  return <h1>Rotator</h1>;
+import "./Rotator.css"
+import IPFeed from "./Util/IPFeed"
+
+export default function Rotator() {
+  return (
+  <div>
+    <><Header /></>
+    <div>
+      <IPFeed/>
+      <br />
+    </div>
+    <div className="rotButtons">
+      <button className="rotButton">Clockwise</button>
+      <button className="rotButton">Azimuth</button>
+      <button className="rotButton">Anti-Clockwise</button>      
+    </div>
+  </div>
+  );
 };
+
+

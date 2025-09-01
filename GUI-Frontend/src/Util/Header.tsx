@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 import "./Header.css";
 
 export default function Header() {
@@ -8,10 +10,10 @@ export default function Header() {
       </a>
       <ul>
         <li className="active">
-          <a href="/Rotator">Rotator</a>
+          <Link to="/Rotator">Rotator</Link>
         </li>
         <li>
-          <a href="Settings">Settings</a>
+          <Link to="/Settings">Settings</Link>
         </li>
       </ul>
     </nav>

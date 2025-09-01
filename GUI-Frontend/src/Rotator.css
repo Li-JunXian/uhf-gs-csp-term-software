@@ -1,0 +1,19 @@
+.rotButtons {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.rotButton {
+    background-color: #ff0a84;
+    border: 3px solid rgb(254, 254, 254);
+    border-radius: 10px;
+    font-size: larger;
+}
+
+.rotButton:hover {
+    background-color: #f664ad;
+    color: white;
+}
