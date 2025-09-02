@@ -154,22 +154,22 @@ def cmd_csp():
         return jsonify({"ok": False, "error": str(e)}), 500
     return jsonify({"ok": True, "sent_bytes": len(frame)})
 
-    @app.route('/rotator/set', methods=['POST'])
-    def rotator_set():
-        payload = request.get_json(force=True) or {}
-        try:
-            az = int(payload.get('az', ''))
-            el = int(payload.get('el', ''))
-        except (ValueError, TypeError):
-            return jsonify({"ok": False, "error": "az and el must be integers"}), 400
+@app.route('/rotator/set', methods=['POST'])
+def rotator_set():
+    payload = request.get_json(force=True) or {}
+    try:
+        az = int(payload.get('az', ''))
+        el = int(payload.get('el', ''))
+    except (ValueError, TypeError):
+        return jsonify({"ok": False, "error": "az and el must be integers"}), 400
 
-        az = max(0, min(az, 360))
-        el = max(0, min(el, 180))
+    az = max(0, min(az, 360))
+    el = max(0, min(el, 90))
 
-        line = "ROT {} {}\n".format(az, el).encode('ascii')
-        cmd_client.send(line)
+    line = "ROT {} {}\n".format(az, el).encode('ascii')
+    cmd_client.send(line)
 
-        return jsonify({"ok": True, "sent": "ROT {} {}".format(az, el)})
+    return jsonify({"ok": True, "sent": "ROT {} {}".format(az, el)})
 
 if __name__ == '__main__':
     print("Starting Flask/SocketIO on {}:{}".format(API_HOST, API_PORT))
