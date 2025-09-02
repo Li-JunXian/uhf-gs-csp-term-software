@@ -157,19 +157,20 @@ const App = () => {
 
   useEffect(() => { //counter to update elapsedTime by 1 every minute
     const minuteCounter = setInterval(() => {
-      setElapsedTime(elapsedTime => elapsedTime + 1);
-      if (elapsedTime == 96) {
-        setElapsedTime(0);
-        setIsMax(true);
-      } else if (isMax && elapsedTime < 96) {
-        setIsMax(false);
-      }
+      setElapsedTime((elapsedTime) => {
+        if (elapsedTime >= 96) {
+          setIsMax(true);
+          return 0;
+        } else if (isMax && elapsedTime < 96) setIsMax(false);
+        return elapsedTime + 1
+      });
     }, 60000);
     return () => clearInterval(minuteCounter)
   }, [])
       
   const satData = useMemo( //Variable that populates/repopulates itself with the coordinates of the orbit of a satellite
     () => {
+      console.log("generated");
       const data = satellites.map((satellite) => { 
         return { 
           name : satellite.name, 
@@ -189,7 +190,6 @@ const App = () => {
     () => {
       var data : PartStruct[] = satData.map((sat) => {
         var temp = sat.path[elapsedTime]
-        console.log(temp);
           return {
             name : sat.name,
             point : temp
@@ -304,7 +304,7 @@ const App = () => {
           particleLat={(d) => (d as PartStruct).point[0]}
           particleLng={(d) => (d as PartStruct).point[1]}
           particleAltitude={(d) => (d as PartStruct).point[2]}
-          particlesSize={2}
+          particlesSize={3}
         />
       </div>
     </div>

@@ -7,19 +7,28 @@ const { start } = require("repl");
 
 const port = 4000;
 
+/**
+ * The 2 URLs represent each Camera's RTSP feeds
+ */
 const rtspUrls = {
   1: "rtsp://star_admin1:fyPe40801_2022@172.20.46.12:554/Streaming/Channels/101/",
   2: "rtsp://star_admin2:fyPe40801_2022@172.20.46.13:554/Streaming/Channels/101/",
 };
 
+/**
+ * hlsDir and hlsFile represent the file path where the HLS formatted stream will be created
+ */
 const hlsDir = path.join(__dirname, "public", "hls", "active");
 const hlsFile = path.join(hlsDir, 'index.m3u8');
 
-if (!fs.existsSync(hlsDir)) fs.mkdirSync(hlsDir, {recursive: true});
+if (!fs.existsSync(hlsDir)) fs.mkdirSync(hlsDir, {recursive: true}); //this line creates the file path in case the file does not exist
 
 let ffmpegProc = null;
 
-function cleanHlsOutput() {
+/**
+ * This function deletes the old stream videos. It will be called whenever the stream swaps to the other stream
+ */
+function cleanHlsOutput() { 
   for (const f of fs.readdirSync(hlsDir)) {
     if (f.endsWith(".m3u8") || f.endsWith(".ts") || f.endsWith(".tmp")) {
      try { fs.unlinkSync(path.join(hlsDir, f)); } catch {}
@@ -27,6 +36,11 @@ function cleanHlsOutput() {
   }
 }
 
+/**
+ * This function calls the ffmpeg script to start converting the chosen rtsp stream into the HLS (.m3u8) format
+ * @param rtspUrl represents the chosen rtsp stream 
+ * @returns the ffmpeg process object
+ */
 const startFFmpeg = (rtspUrl) => {
   const ffmpeg = spawn("ffmpeg", [
     "-rtsp_transport", "tcp",
@@ -49,6 +63,10 @@ const startFFmpeg = (rtspUrl) => {
   return ffmpeg;
 }
 
+/**
+ * This function stops the ffmpeg Process
+ * @returns if the ffmpeg Process was killed or not by the ffmpegProc.kill
+ */
 function stopFFmpeg() {
   if (!ffmpegProc) return false;
   try {
