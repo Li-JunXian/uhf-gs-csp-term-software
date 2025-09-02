@@ -54,7 +54,7 @@ body {
 
 #inputForm {
   position:absolute;
-  top: 27;
+  top: 0;
   left: 0;
   z-index: 10;
   padding-left: 8px;
