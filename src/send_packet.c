@@ -30,26 +30,14 @@
  #include "receive_packet.h"
 
 #include "process_mcs_file.h"
+#include "send_packet.h"
  
- /* Option to perform automatic LNA feature*/
- #define AUTO_LNA	0	/* change to 1 to enable LNA feature*/
-
-typedef struct {
-	uint8_t priority;
-	uint8_t src;
-	uint8_t dst;
-	uint8_t dst_port;
-	uint8_t src_port;
-	uint8_t hmac;
-	uint8_t xtea;
-	uint8_t rdp;
-	uint8_t crc;
-} mcs_packet_header_t;
+/* Option to perform automatic LNA feature*/
+#define AUTO_LNA	0	/* change to 1 to enable LNA feature*/
 
 static int send_packet_execute(const char *origin, const mcs_packet_header_t *header,
-				   csp_packet_t *packet, const uint8_t *payload, size_t payload_len,
-				   int *packet_consumed)
-{
+	csp_packet_t *packet, const uint8_t *payload, size_t payload_len,
+	int *packet_consumed) {
 	int success = 1;
 	int consumed = 0;
 	char time_string_sent[100] = "";

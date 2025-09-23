@@ -420,7 +420,6 @@ static void gui_backend_handle_set_rotator(struct gui_backend_client *client,
     }
 
     int success = serial_set_az_el((int)azimuth, (int)elevation);
-    gui_backend_notify_rotator((int)azimuth, (int)elevation, success);
     if (!success)
     {
         gui_backend_send(client, "ERROR Rotator command failed\n");
