@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+import string
+
+def options(ctx):
+
+	ctx.add_option('--with-clients', action='store', default=None, help='Set comma separated list of clients')
+
+	global all_modules
+	all_modules = [name for name in os.listdir(ctx.path.abspath()) if os.path.isdir(ctx.path.abspath() + '/' + name)]
+	ctx.recurse(all_modules, once=True)
+
+def configure(ctx):
+
+	if ctx.options.with_clients and len(ctx.options.with_clients):
+		ctx.env.CLIENT_MODULES = map(string.strip, ctx.options.with_clients.split(','))
+	else:
+		global all_modules
+		ctx.env.CLIENT_MODULES = all_modules
+		
+	ctx.msg('Clients included:', ", ".join(ctx.env.CLIENT_MODULES))
+
+	ctx.recurse(ctx.env.CLIENT_MODULES, once=True)
+	for module in ctx.env.CLIENT_MODULES:
+		ctx.env.append_unique('LIBCLIENTS_USE', module + '-client')
+
+def build(ctx):
+	ctx.recurse(ctx.env.CLIENT_MODULES, once=True)

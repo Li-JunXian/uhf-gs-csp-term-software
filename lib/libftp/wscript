@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+
+APPNAME = 'libftp'
+VERSION = '2.0'
+
+def options(ctx):
+    ctx.load('gcc')
+
+    gr = ctx.add_option_group('libftp options')
+    gr.add_option('--enable-ftp-server', action='store_true', help='Enable FTP server')
+    gr.add_option('--enable-ftp-client', action='store_true', help='Enable FTP client (posix only)')
+    gr.add_option('--enable-ftp-backend-file', action='store_true', help='Enable file backend')
+
+
+def configure(ctx):
+    ctx.load('gcc')
+
+    ctx.env.append_unique('USES_FTP', 'csp')
+    ctx.env.append_unique('USES_FTP', 'util')
+    ctx.env.append_unique('USES_FTP', 'gosh')
+    ctx.env.append_unique('USES_FTP', 'storage')
+
+    if ctx.options.enable_ftp_server:
+        ctx.env.append_unique('FILES_FTP', ['src/ftp/ftp_server.c', 'src/ftp/backend_ram.c'])
+        if ctx.options.enable_ftp_backend_file:
+            ctx.env.append_unique('FILES_FTP', ['src/ftp/backend_file.c'])
+            ctx.define_cond('ENABLE_FTP_FILE_BACKEND', ctx.options.enable_ftp_backend_file)
+            
+    if ctx.options.enable_ftp_client:
+        ctx.define_cond('ENABLE_FTP_CLIENT', ctx.options.enable_ftp_client)
+        ctx.env.append_unique('FILES_FTP',   ['src/ftp/ftp_client.c'])
+        ctx.env.append_unique('FILES_FTP',   ['src/ftp/cmd_ftp.c'])
+
+    # Check for glob.h
+    ctx.check_cc(header_name='glob.h', mandatory=False, define_name='HAVE_GLOB_H')
+
+    ctx.define('LIBFTP_VERSION', VERSION)
+
+    ctx.write_config_header('include/conf_ftp.h', top=True, remove=True)
+
+
+def build(ctx):
+
+    ctx(export_includes=['include'], name='ftp_h')
+
+    if ctx.env.FILES_FTP:
+        ctx.objects(source=ctx.path.ant_glob(ctx.env.FILES_FTP, excl=ctx.env.EXCLUDES_FTP), 
+            target='ftp', 
+            includes='include',
+            export_includes=['include'],
+            defines = ctx.env.DEFINES_FTP,
+            use=ctx.env.USES_FTP,
+        )
+

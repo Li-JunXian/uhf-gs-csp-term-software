@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+APPNAME = 'gatoss-uc-client'
+
+top	= '.'
+out	= 'build'
+
+def options(ctx):
+    gr = ctx.add_option_group('ADS-B client options')
+    gr.add_option('--with-task-passive', action='store_true', help='Select if task passive should be included')
+	
+def configure(ctx):
+    ctx.define_cond('TASK_PASSIVE', ctx.options.with_task_passive)
+    ctx.write_config_header('include/conf_adsb_client.h', top=True, remove=True)
+	
+def build(ctx):
+    ctx.objects(
+		source = ctx.path.ant_glob('*.c'), 
+		target = APPNAME,
+		includes = '.',
+		export_includes = '.',
+		use = ['csp', 'gosh', 'io', 'util'],
+		lib = ['m']
+	)
+
+    if ctx.env.ENABLE_BINDINGS:
+        ctx.shlib(source=ctx.path.ant_glob('*.c'),
+                target = APPNAME,
+                includes= ['.'],
+                export_includes = '.',
+                use = ['csp', 'gosh', 'io', 'util'],
+        )
+

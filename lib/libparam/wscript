@@ -1,0 +1,129 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+
+APPNAME = 'libparam'
+VERSION = '2.0'
+
+def options(ctx):
+    ctx.load('gcc')
+
+    ctx.recurse(['client'], once=True)
+
+    gr = ctx.add_option_group('libparam options')
+    gr.add_option('--enable-param-host', action='store_true', help='Enable Parameter Storage')
+    gr.add_option('--enable-param-client', action='store_true', help='Enable Parameter Client')
+    gr.add_option('--enable-param-server', action='store_true', help='Enable Parameter Server')
+    gr.add_option('--disable-param-cmd', action='store_true', help='Enable on GOSH commands')
+    gr.add_option('--param-backend', action='store', default='none', help='Set backend <none, file>')
+    gr.add_option('--param-max-tables', action='store', default='20', help='Set max table count')
+    gr.add_option('--enable-bindings', action='store_true', help='Enable Python bindings')
+    gr.add_option('--ut_list', action='store', default='', help='List of unit tests to execute')
+
+def configure(ctx):
+    ctx.load('gcc')
+    ctx.env.append_unique('CFLAGS', ['-std=gnu99'])
+
+    ctx.env.append_unique('INCLUDES_PARAM',    ['include', 'client/include', 'client/src/include'])
+    ctx.env.append_unique('USE', ['util'])
+
+    # Host
+    if ctx.options.enable_param_host:
+        ctx.define('ENABLE_PARAM_HOST', 1)
+        ctx.env.append_unique('FILES_PARAM', ['client/src/param_string.c'])
+        ctx.env.append_unique('FILES_PARAM', ['src/store/param_load.c'])
+        ctx.env.append_unique('FILES_PARAM', ['src/host/param_host.c'])
+        ctx.env.append_unique('FILES_PARAM', ['src/host/param_index.c'])
+        ctx.env.append_unique('INCLUDES_PARAM',    ['src/host/'])
+        if not ctx.options.disable_param_cmd:
+            ctx.env.append_unique('FILES_PARAM', ['src/param_serializer.c'])
+            ctx.env.append_unique('FILES_PARAM', ['src/host/cmd_param.c'])
+            ctx.env.append_unique('USE', ['gosh', 'util'])
+
+        ctx.env.append_unique('FILES_PARAM', ['src/store/param_'+ctx.options.param_backend+'.c'])
+        ctx.env.append_unique('INCLUDES_PARAM',    ['src/store'])
+        ctx.env.append_unique('FILES_PARAM', ['client/src/param_lock_'+ctx.options.param_lock+'.c'])
+        ctx.env.append_unique('INCLUDES_PARAM',    ['src/lock'])
+
+    # Client   
+    if ctx.options.enable_param_client:
+        ctx.define('ENABLE_PARAM_CLIENT', 1)   
+        ctx.env.append_unique('USE', ['csp'])
+        ctx.env.append_unique('FILES_PARAM', ['client/src/rparam_client.c'])
+        ctx.env.append_unique('INCLUDES_PARAM',    ['client'])
+        ctx.env.append_unique('USE', ['util'])
+
+        if not ctx.options.disable_param_cmd:
+            ctx.env.append_unique('FILES_PARAM', ['client/src/cmd_rparam.c'])
+            ctx.env.append_unique('USE', ['gosh'])
+
+    # Server
+    if ctx.options.enable_param_server:
+
+        ctx.define('ENABLE_PARAM_SERVER', 1)
+        ctx.env.append_unique('FILES_PARAM', ['src/server/*.c'])
+        ctx.env.append_unique('INCLUDES_PARAM',    ['src/server/'])
+
+    # Always build these
+    ctx.env.append_unique('FILES_PARAM', ['client/src/param_string.c'])
+    ctx.env.append_unique('FILES_PARAM', ['client/src/param_serializer.c'])
+    ctx.env.append_unique('FILES_PARAM', ['client/src/param_fletcher.c'])
+    ctx.env.append_unique('FILES_PARAM', ['client/src/lock/param_lock_'+ctx.options.param_lock+'.c'])
+    ctx.env.append_unique('INCLUDES_PARAM',    ['client/param'])
+
+    # Files for unittests
+    ctx.env.append_unique('FILES_STORE_FRAM_UT', ['tst/fram_store-UT/fram_store-UT.c', 'src/store/param_fram.c', 'client/src/param_fletcher.c', 'src/host/param_index.c'])
+
+    ctx.define('PARAM_MAX_TABLES', int(ctx.options.param_max_tables))
+    ctx.define('LIBPARAM_VERSION', VERSION)
+
+    ctx.write_config_header('include/conf_param.h', top=True, remove=True)
+
+def build(ctx):
+
+    if ctx.options.ut_list != '':
+
+        ctx.program(source=ctx.path.ant_glob(ctx.env.FILES_STORE_FRAM_UT),
+                    target='fram_store-UT',
+                    use=[],
+                    libpath=[],
+                    lib=['cmocka'],
+                    includes=ctx.env.INCLUDES_PARAM + ['src/store', 'src/host']
+                    )
+    else:
+        if ctx.env.FILES_PARAM:
+
+            ctx.objects(source=ctx.path.ant_glob(ctx.env.FILES_PARAM, excl=ctx.env.EXCLUDES_PARAM), 
+                target='param', 
+                includes= ctx.env.INCLUDES_PARAM,
+                export_includes = ctx.env.INCLUDES_PARAM,
+                defines = ctx.env.DEFINES_PARAM,
+                use=ctx.env.USE,
+            )
+
+            if ctx.env.ENABLE_BINDINGS:
+                ctx.shlib(source=ctx.path.ant_glob(ctx.env.FILES_PARAM, excl=ctx.env.EXCLUDES_PARAM),
+                    target = 'param',
+                    includes= ctx.env.INCLUDES_PARAM,
+                    export_includes = ctx.env.INCLUDES_PARAM,
+                    use=ctx.env.USE,
+                    lib=ctx.env.USE,
+                    )
+
+def test(ctx):
+
+    for ut in ['fram_store']:
+        if ctx.options.ut_list == '' or ut in ctx.options.ut_list:
+            ret = ctx.exec_command('build/' + ut + '-UT')
+            if ret >  0:
+                ctx.fatal("Unittest '" + ut +"' failed: " + str(ret))
+
+def dist(ctx):
+    ctx.excl = ".*"
+    if ctx.options.enable_param_local_client != True:
+        print("NOTE: No local client")
+        ctx.excl += ' src/host'
+    if ctx.options.enable_param_server != True:
+        print("NOTE: No server")
+        ctx.excl += ' src/server'
