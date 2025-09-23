@@ -43,8 +43,6 @@
 /*Create own command */
 #include <command/command.h>
 
-#include "gui_backend.h"
-
 //---------------------------------------------------------------------------------------------
 const vmem_t vmem_map[] = {{0}};
 
@@ -224,13 +222,6 @@ int main(int argc, char * argv[]) {
 	void * tcp_server();
 	static pthread_t handle_tcp;
 	pthread_create(&handle_tcp, NULL, tcp_server, NULL);
-	static pthread_t handle_gui_backend;
-	int gui_backend_started = 0;
-	if (gui_backend_start(&handle_gui_backend) != 0) {
-		log_error("[GUI Backend] Failed to initialise backend listener thread");
-	} else {
-		gui_backend_started = 1;
-	}
 	
 	/* Debug console thread */
 	command_init();
@@ -245,8 +236,6 @@ int main(int argc, char * argv[]) {
 	pthread_join(handle_doppler, NULL);					// (Disable antenna tracking)
 	pthread_join(handle_tleupdate, NULL);					// (Disable antenna tracking)
 	pthread_join(handle_tcp, NULL);
-	if (gui_backend_started)
-		pthread_join(handle_gui_backend, NULL);
 
 	return 0;
 

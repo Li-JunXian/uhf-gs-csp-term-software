@@ -29,8 +29,6 @@
 
 #include "serial_rotator.h"
 
-#include "gui_backend.h"
-
 #define AZIMMUTH_ANGLE_OFFSET	80
 //#define AZIMMUTH_ANGLE_OFFSET	0
 #define MIN_ANGLE_THRESHOLD	2
@@ -134,7 +132,6 @@ int serial_set_az_el(int azi,int ele)
 	if(AZEL_TRACK_CMD_LOCK == 1)
 	{
 		log_info("AZEL CMD locked.");
-		gui_backend_notify_rotator(azi, ele, 0);
 		return 1;
 	}
 	
@@ -154,18 +151,15 @@ int serial_set_az_el(int azi,int ele)
 	int fd = open (serial_port, O_RDWR | O_NOCTTY);
 	if (fd < 0)
 	{
-		log_error("error connecting GS232B serial port");
-		gui_backend_notify_rotator(azi, ele, 0);
-		return 0;
+        	log_error("error connecting GS232B serial port");
+        	return 0;
 	}
 
 	if (set_interface(fd, B4800, 0) != 0)  // set speed to 9600 bps, 8n1 (no parity)
 	{
 		log_error("error interface setup");
-		close(fd);
-		gui_backend_notify_rotator(azi, ele, 0);
 		return 0;
-	}
+	}	
 
 	tcflush(fd, TCIFLUSH); //dicard old data and flush the buffers
 
@@ -178,17 +172,12 @@ int serial_set_az_el(int azi,int ele)
 
 	log_info("%s",set_az_el);
 	wr = write(fd,&set_az_el,sizeof(set_az_el)-1);
-	int result = 1;
-	if (wr == 0) {
+	if (wr == 0)
 		log_error("Setting AZ:%d EL%d failed",azi,ele);
-		result = 0;
-	}
 
 	close(fd);
 
-	gui_backend_notify_rotator(azi, ele, result);
-
-	return result;
+	return 1;
 }
 /* ------------------------------------------------------------------------------- */
 int read_azel(struct command_context *ctx)

@@ -21,7 +21,6 @@
 #include <util/log.h>
 #include <csp-term.h>
 #include "receive_packet.h"
-#include "gui_backend.h"
 #include "itoa.h"
 
 /*For creation of new file directory*/
@@ -113,7 +112,6 @@ void receive_packet(csp_packet_t *packet)
 	}
 	fclose(file_recv_pointer);
 
-	gui_backend_notify_downlink("TASK_SERVER", time_file_recv, packet->length, header_values[1], header_values[0]);
 
 	/* Differentiate packet type using destination node address */
 	if( header_values[0] < 20) {
