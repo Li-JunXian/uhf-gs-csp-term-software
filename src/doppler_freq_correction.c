@@ -70,6 +70,47 @@ static void doppler_tracking(int txfreq, int rxfreq, uint32_t tnow);
 int mcs_sat_sel(uint32_t sat_no_sel);
 int ping_sat_func(void);
 
+/* For GUI-Backend */
+int doppler_get_tx_freq(void)
+{
+        return TXfreq;
+}
+
+int doppler_get_rx_freq(void)
+{
+        return RXfreq;
+}
+
+void doppler_get_tle(char *line1, size_t line1_len, char *line2, size_t line2_len)
+{
+	if (line1 != NULL && line1_len > 0) {
+			strncpy(line1, TLE1, line1_len - 1);
+			line1[line1_len - 1] = '\0';
+	}
+	if (line2 != NULL && line2_len > 0) {
+			strncpy(line2, TLE2, line2_len - 1);
+			line2[line2_len - 1] = '\0';
+	}
+}
+
+int doppler_set_tx_freq(uint32_t freq)
+{
+	if (!ax100_set_tx_freq(AX100_V3_ADDRESS, AX100_V3_TIMEOUT, freq))
+			return 0;
+
+	TXfreq = (int) freq;
+	return 1;
+}
+
+int doppler_set_rx_freq(uint32_t freq)
+{
+	if (!ax100_set_rx_freq(AX100_V3_ADDRESS, AX100_V3_TIMEOUT, freq))
+			return 0;
+
+	RXfreq = (int) freq;
+	return 1;
+}
+
 int ax100_set_tx_freq(uint8_t node, uint32_t timeout, uint32_t freq)
 {
 	if (freq == 0)
