@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+
+APPNAME = 'nanopower-client'
+
+def options(ctx):
+
+    gr = ctx.add_option_group('Nanopower client options')
+    gr.add_option('--enable-nanopower-client', action='store_true', help='Enable client code for NanoPower')
+    gr.add_option('--enable-nanopower2-client', action='store_true', help='Enable client code for NanoPower2')
+    gr.add_option('--enable-nanopower-slave-client', action='store_true', help='Enable client code for NanoPower I2C slave')
+    gr.add_option('--disable-nanopower-gosh', action='store_true', help='Disable NanoPower gosh client')
+
+def configure(ctx):
+    if ctx.options.enable_nanopower_client:
+        ctx.env.append_unique('FILES_EPS_CLIENT', ['src/nanopower.c'])
+        if not ctx.options.disable_nanopower_gosh:
+            ctx.env.append_unique('FILES_EPS_CLIENT', ['src/cmd_eps.c'])
+        ctx.define_cond('ENABLE_NANOPOWER_CLIENT', ctx.options.enable_nanopower_client)
+        ctx.env.append_unique('CFLAGS', '-DNANOPOWER_CLIENT')
+
+    if ctx.options.enable_nanopower2_client:
+        ctx.env.append_unique('FILES_EPS_CLIENT',   ['src/nanopower2.c'])
+        if not ctx.options.disable_nanopower_gosh:
+            ctx.env.append_unique('FILES_EPS_CLIENT',   ['src/cmd_eps2.c'])
+        ctx.define_cond('ENABLE_NANOPOWER2_CLIENT', ctx.options.enable_nanopower2_client)
+        ctx.env.append_unique('CFLAGS', '-DNANOPOWER2_CLIENT')
+
+    if ctx.options.enable_nanopower_slave_client:
+        ctx.env.append_unique('FILES_EPS_CLIENT',   ['src/cmd_eps_slave.c'])
+        ctx.define_cond('ENABLE_NANOPOWER_SLAVE_CLIENT', ctx.options.enable_nanopower_slave_client)
+        ctx.env.append_unique('CFLAGS', '-DNANOPOWER_SLAVE_CLIENT')
+
+def build(ctx):
+	ctx(export_includes=['.'], name=APPNAME)
+	if ctx.env.FILES_EPS_CLIENT:
+		ctx.objects(
+			source = ctx.path.ant_glob(ctx.env.FILES_EPS_CLIENT),
+			target = APPNAME,
+			includes = '.',
+			export_includes = '.',
+			use = ['csp', 'gosh', 'param']
+		)

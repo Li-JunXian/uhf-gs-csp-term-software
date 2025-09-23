@@ -1,0 +1,64 @@
+[submodule "nanopower"]
+	path = nanopower
+	url = git@github.com:gomspace/nanopower.git
+	branch = client
+[submodule "nanocom-ax"]
+	path = nanocom-ax
+	url = git@github.com:gomspace/nanocom-ax.git
+	branch = client
+[submodule "nanocam2"]
+	path = nanocam2
+	url = git@github.com:gomspace/nanocam2.git
+	branch = client
+[submodule "libadcs"]
+	path = libadcs
+	url = git@github.com:gomspace/libadcs.git
+	branch = client
+[submodule "liba3200"]
+	path = liba3200
+	url = git@github.com:gomspace/liba3200.git
+	branch = client
+[submodule "gatoss-uc"]
+	path = gatoss-uc
+	url = git@github.com:gomspace/gatoss-uc.git
+	branch = client
+[submodule "nanohub"]
+	path = nanohub
+	url = git@github.com:gomspace/nanohub.git
+	branch = client
+[submodule "nanopower-bpx"]
+	path = nanopower-bpx
+	url = git@github.com:gomspace/nanopower-bpx.git
+	branch = client
+[submodule "libgssb"]
+	path = libgssb
+	url = git@github.com:gomspace/libgssb.git
+	branch = client
+[submodule "a712"]
+	path = a712
+	url = git@github.com:gomspace/liba712.git
+	branch = client
+[submodule "nanocom"]
+	path = nanocom
+	url = git@github.com:gomspace/nanocom.git
+	branch = client
+[submodule "libp60"]
+	path = libp60
+	url = git@github.com:gomspace/libp60.git
+	branch = client
+[submodule "p60-dock"]
+	path = p60-dock
+	url = git@github.com:gomspace/p60-dock.git
+	branch = client
+[submodule "p60-acu"]
+	path = p60-acu
+	url = git@github.com:gomspace/p60-acu.git
+	branch = client
+[submodule "p60-pdu"]
+	path = p60-pdu
+	url = git@github.com:gomspace/p60-pdu.git
+	branch = client
+[submodule "a3200-adcs"]
+	path = a3200-adcs
+	url = git@github.com:gomspace/a3200-adcs.git
+	branch = client

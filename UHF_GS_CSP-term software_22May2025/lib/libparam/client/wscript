@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+
+APPNAME = 'libparam-client'
+VERSION = '2.0'
+
+def options(ctx):
+    ctx.load('gcc')
+    gr = ctx.add_option_group('libparam client options')
+    gr.add_option('--disable-param-cmd', action='store_true', help='Disable client cmd code for the parameter library')
+    gr.add_option('--param-lock', action='store', default='freertos', help='Set locking <none, freertos>')
+    gr.add_option('--build-example', action='store', default=False, help='Build the example code program')
+
+def configure(ctx):
+    ctx.load('gcc')
+    ctx.env.append_unique('CFLAGS', ['-std=gnu99'])
+    ctx.env.append_unique('USE', ['util', 'csp'])    
+    ctx.env.append_unique('FILES_PARAM_CLIENT', ['src/rparam_client.c', 'src/param_serializer.c', 'src/param_string.c', 'src/param_fletcher.c', 'src/param_lock_'+ctx.options.param_lock+'.c' ])
+        
+    if not ctx.options.disable_param_cmd:        
+        ctx.env.append_unique('FILES_PARAM_CLIENT', ['src/cmd_rparam.c'])
+        ctx.env.append_unique('USE', ['gosh'])
+    ctx.write_config_header('include/conf_param.h', top=True, remove=True)
+
+def build(ctx):
+    ctx.objects(source = ctx.path.ant_glob(ctx.env.FILES_PARAM_CLIENT, excl=ctx.env.EXCLUDES_PARAM),
+        target = APPNAME,
+        includes = ['src/include', 'include'],
+        export_includes = 'include',
+        defines = ctx.env.DEFINES_PARAM,
+        use = ctx.env.USE,
+    )
+    
+    if ctx.options.build_example:
+        ctx.program(        
+            source=ctx.path.ant_glob(ctx.env.FILES_PARAM_CLIENT + ['src/example_code.c']), 
+            target=APPNAME+'-example', 
+            use=['param', 'util', 'log'],
+            libpath=[],
+            lib=['pthread', 'util', 'socketcan', 'zmq'],
+            includes=['src/include', 'include']
+        )

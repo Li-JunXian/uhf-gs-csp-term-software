@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+
+APPNAME = 'nanopower-bpx-client'
+
+def options(ctx):
+
+    gr = ctx.add_option_group('NanoPower-bpx client options')
+    gr.add_option('--enable-bpx-client', action='store_true', help='Enable client code for NanoPower-bpx')
+    gr.add_option('--enable-bpx-slave-client', action='store_true', help='Enable client code for NanoPower-bpx I2C slave')
+    gr.add_option('--disable-bpx-cmd', action='store_true', help='Disable cmd client code for NanoPower-bpx')
+
+def configure(ctx):
+    if ctx.options.enable_bpx_client:
+        ctx.env.append_unique('FILES_EPS_BPX_CLIENT',   ['src/bpx.c'])
+        if not ctx.options.disable_bpx_cmd:
+            ctx.env.append_unique('FILES_EPS_BPX_CLIENT',   ['src/cmd_bpx.c'])
+        ctx.define_cond('ENABLE_BPX_CLIENT', ctx.options.enable_bpx_client)
+        ctx.env.append_unique('CFLAGS', '-DNANOPOWER_BPX_CLIENT')
+        
+    if ctx.options.enable_bpx_slave_client:
+        if not ctx.options.disable_bpx_cmd:
+            ctx.env.append_unique('FILES_EPS_BPX_CLIENT',   ['src/cmd_bpx_slave.c'])
+        ctx.define_cond('ENABLE_BPX_SLAVE_CLIENT', ctx.options.enable_bpx_slave_client)
+        ctx.env.append_unique('CFLAGS', '-DNANOPOWER_BPX_SLAVE_CLIENT')
+
+
+def build(ctx):
+    ctx(export_includes='include', name='nanopower_bpx_client')
+        
+def build(ctx):
+	ctx(export_includes=['.'], name=APPNAME)
+	if ctx.env.FILES_EPS_BPX_CLIENT:
+		ctx.objects(
+			source = ctx.path.ant_glob(ctx.env.FILES_EPS_BPX_CLIENT), 
+			target = APPNAME,
+			includes = 'include',
+			export_includes = 'include',
+			use = ['csp', 'gosh', 'param']
+		)

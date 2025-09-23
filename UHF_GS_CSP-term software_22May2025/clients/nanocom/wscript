@@ -1,0 +1,23 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+APPNAME = 'nanocom-client'
+
+top	= '.'
+out	= 'build'
+
+def options(ctx):
+	pass
+	
+def configure(ctx):
+	pass
+	
+def build(ctx):
+	ctx(export_includes=['.'], name=APPNAME)
+	ctx.objects(
+		source = ctx.path.ant_glob('*.c'), 
+		target = APPNAME,
+		includes = '.',
+		export_includes = '.',
+		use = ['csp', 'gosh', 'param']
+	)
