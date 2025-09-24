@@ -35,7 +35,7 @@
 // set AZEL CMD lock to '1' to prevent antenna movemnet else '0'
 #define AZEL_TRACK_CMD_LOCK	0
 
-static char *serial_port = "/dev/ttyUSB1";
+static char *serial_port = "/dev/ttyUSB5";
 static int azi_old = -1;
 static int ele_old = -1;
 

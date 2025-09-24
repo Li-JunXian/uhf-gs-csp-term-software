@@ -11,6 +11,7 @@
 #include <time.h>
 #include "predict.h"
 #include "serial_rotator.h"
+#include "doppler_freq_correction.h"
 
 /* GS100/AX100 configuration parameter*/
 #define AX100_PORT_RPARAM	7	/* task_server remote param port */
@@ -69,6 +70,55 @@ static uint32_t sat_no = 1;	// Initialisation tracking Lumelite 1
 static void doppler_tracking(int txfreq, int rxfreq, uint32_t tnow);
 int mcs_sat_sel(uint32_t sat_no_sel);
 int ping_sat_func(void);
+
+int doppler_get_tx_freq(void)
+{
+	return TXfreq;
+}
+
+int doppler_get_rx_freq(void)
+{
+	return RXfreq;
+}
+
+void doppler_get_tle(char *tle1_buf, size_t tle1_buf_len,
+				   char *tle2_buf, size_t tle2_buf_len)
+{
+	if (tle1_buf && tle1_buf_len > 0) {
+		size_t max_copy = tle1_buf_len - 1;
+		if (max_copy > 0) {
+			strncpy(tle1_buf, TLE1, max_copy);
+			tle1_buf[max_copy] = '\0';
+		} else {
+			tle1_buf[0] = '\0';
+		}
+	}
+	if (tle2_buf && tle2_buf_len > 0) {
+		size_t max_copy = tle2_buf_len - 1;
+		if (max_copy > 0) {
+			strncpy(tle2_buf, TLE2, max_copy);
+			tle2_buf[max_copy] = '\0';
+		} else {
+			tle2_buf[0] = '\0';
+		}
+	}
+}
+
+int doppler_set_tx_freq(uint32_t freq)
+{
+	if (!ax100_set_tx_freq(AX100_V3_ADDRESS, AX100_V3_TIMEOUT, freq))
+		return 0;
+	TXfreq = (int)freq;
+	return 1;
+}
+
+int doppler_set_rx_freq(uint32_t freq)
+{
+	if (!ax100_set_rx_freq(AX100_V3_ADDRESS, AX100_V3_TIMEOUT, freq))
+		return 0;
+	RXfreq = (int)freq;
+	return 1;
+}
 
 int ax100_set_tx_freq(uint8_t node, uint32_t timeout, uint32_t freq)
 {

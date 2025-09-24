@@ -32,7 +32,7 @@
 #include "doppler_freq_correction.h"
  
 #define LENGTH 512
-#define MCS_PORT 1028
+#define MCS_PORT 1128 /* switched from 1028 to avoid local port conflicts */
 #define MCS_DATA_DIR "/home/rai/Desktop/GS_Server_Folder/Received_From_MCS/"
 #define LOG 10
  
