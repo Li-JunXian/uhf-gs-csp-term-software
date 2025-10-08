@@ -287,7 +287,7 @@ const App = () => {
           pathsData={satData}
           pathLabel="name"
           pathPoints="path"
-          pathColor={() => ["rgba(0,0,255,0.6)", "rgba(255,0,0,0.6)"]}
+          pathColor={() => ["rgba(27, 255, 46, 1)", "rgba(254, 230, 9, 1)"]}
           onPathClick={(path, event, coords) => {
             setHoveredPoint(coords)
             setClickedPoint((path as SatStruct).name);
@@ -304,7 +304,7 @@ const App = () => {
           particleLat={(d) => (d as PartStruct).point[0]}
           particleLng={(d) => (d as PartStruct).point[1]}
           particleAltitude={(d) => (d as PartStruct).point[2]}
-          particlesSize={3}
+          particlesSize={7}
         />
       </div>
     </div>
