@@ -21,9 +21,14 @@ export function generateOrbit(TLE1 : string, TLE2 : string) {
             let lng = Number(satellite.degreesLong(gd.longitude).toFixed(2));
             let alt = Number(gd.height.toFixed(2));
             let newCoord = [lat, lng, alt/1000] 
+            // console.log(
+            //     `T+${m} min → Lat: ${lat}°, ` +
+            //     `Lon: ${lng}°, ` +
+            //     `Alt: ${alt} km`
+            // );
             orbitData.push(newCoord)
         }
     }
     return orbitData;
 }
-
+// Your TLE

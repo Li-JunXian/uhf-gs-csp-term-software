@@ -5,7 +5,7 @@ import "./IPFeed.css"
 
 export default function CameraStream() {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [currentCam, setCurrentCam] = useState(0);
+    const [currentCam, setCurrentCam] = useState(1);
     const [loading, setLoading] = useState(false);
 
     const URL = "http://localhost:4000/index.m3u8"
@@ -51,9 +51,7 @@ export default function CameraStream() {
         if (videoRef.current) {
             if (Hls.isSupported()) {
                 const hls = new Hls();
-                switchCamera(1);
-                waitForPlaylist(`${URL}?t=${Date.now()}`)
-                hls.loadSource(`${URL}`);
+                hls.loadSource(URL);
                 hls.attachMedia(videoRef.current);
                 hls.on(Hls.Events.MANIFEST_PARSED, () => {
                     videoRef.current?.play();
