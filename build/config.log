@@ -1,29 +1,29 @@
-# project csp-term (v2.9) configured on Thu May 22 11:57:22 2025 by
+# project csp-term (v2.9) configured on Wed Oct  8 12:32:44 2025 by
 # waf 1.8.7 (abi 98, python 2070cf0 on linux2)
 # using ./waf configure
 #
 ----------------------------------------
 Setting top to
-/home/yuling/Desktop/UHF_GS_CSP-term software_16 May 2023_auto client addr
+/home/emil/Desktop/uhf-gs-csp-term-software_22may2025
 ----------------------------------------
 Setting out to
-/home/yuling/Desktop/UHF_GS_CSP-term software_16 May 2023_auto client addr/build
+/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build
 ----------------------------------------
 Checking for program 'gcc, cc'
 /usr/bin/gcc
-find program=['gcc', 'cc'] paths=['/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/snap/bin'] var='CC' -> ['/usr/bin/gcc']
+find program=['gcc', 'cc'] paths=['/home/emil/bin', '/home/emil/.local/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games', '/snap/bin'] var='CC' -> ['/usr/bin/gcc']
 ----------------------------------------
 Checking for program 'ar'
 /usr/bin/ar
-find program=['ar'] paths=['/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/snap/bin'] var='AR' -> ['/usr/bin/ar']
+find program=['ar'] paths=['/home/emil/bin', '/home/emil/.local/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games', '/snap/bin'] var='AR' -> ['/usr/bin/ar']
 ----------------------------------------
 Checking for program 'sphinx-build'
 /usr/bin/sphinx-build
-find program=['sphinx-build'] paths=['/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/snap/bin'] var='SPHINX_BUILD' -> ['/usr/bin/sphinx-build']
+find program=['sphinx-build'] paths=['/home/emil/bin', '/home/emil/.local/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games', '/snap/bin'] var='SPHINX_BUILD' -> ['/usr/bin/sphinx-build']
 ----------------------------------------
 Checking for program 'pkg-config'
 /usr/bin/pkg-config
-find program=['pkg-config'] paths=['/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/snap/bin'] var='PKGCONFIG' -> ['/usr/bin/pkg-config']
+find program=['pkg-config'] paths=['/home/emil/bin', '/home/emil/.local/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games', '/snap/bin'] var='PKGCONFIG' -> ['/usr/bin/pkg-config']
 ----------------------------------------
 Checking for 'libcurl'
 ['/usr/bin/pkg-config', '--cflags', '--libs', 'libcurl']
@@ -54,10 +54,10 @@ int use_ebcdic (int i) {
 extern int foo;
 
 <==
-[1/2] Compiling [32mbuild/.conf_check_c072ccde5a7993b005dd57adf306fcfd/test.c[0m
+[1/2] Compiling [32mbuild/.conf_check_e984424a9c3781d3f3ca48c176e644c6/test.c[0m
 
-['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="unknown"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '../test.c', '-c', '-o', '/home/yuling/Desktop/UHF_GS_CSP-term software_16 May 2023_auto client addr/build/.conf_check_c072ccde5a7993b005dd57adf306fcfd/testbuild/test.c.1.o']
-[2/2] Processing [35mbuild/.conf_check_c072ccde5a7993b005dd57adf306fcfd/testbuild/test.c.1.o[0m
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="99d57b0"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_e984424a9c3781d3f3ca48c176e644c6/testbuild/test.c.1.o']
+[2/2] Processing [35mbuild/.conf_check_e984424a9c3781d3f3ca48c176e644c6/testbuild/test.c.1.o[0m
 
 little
 ----------------------------------------
@@ -71,10 +71,10 @@ int main(int argc, char **argv) {
 }
 
 <==
-[1/2] Compiling [32mbuild/.conf_check_844180c6ab9e7f2311a963a38e843639/test.c[0m
+[1/2] Compiling [32mbuild/.conf_check_ec1abd68f15df4d5495ce54f12f1adbd/test.c[0m
 
-['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="unknown"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '../test.c', '-c', '-o', '/home/yuling/Desktop/UHF_GS_CSP-term software_16 May 2023_auto client addr/build/.conf_check_844180c6ab9e7f2311a963a38e843639/testbuild/test.c.1.o']
-[2/2] Linking [33mbuild/.conf_check_844180c6ab9e7f2311a963a38e843639/testbuild/libtestprog.a[0m
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="99d57b0"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_ec1abd68f15df4d5495ce54f12f1adbd/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_ec1abd68f15df4d5495ce54f12f1adbd/testbuild/libtestprog.a[0m
 
 ['/usr/bin/ar', 'rcs', 'libtestprog.a', 'test.c.1.o']
 yes
@@ -88,12 +88,12 @@ int main(int argc, char **argv) {
 }
 
 <==
-[1/2] Compiling [32mbuild/.conf_check_7a459d0d316cb90d7b9cb20106ec9182/test.c[0m
+[1/2] Compiling [32mbuild/.conf_check_be2c174121021f214516a9c552d8ebe3/test.c[0m
 
-['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="unknown"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '-DCSP_HAVE_STDBOOL_H=1', '../test.c', '-c', '-o', '/home/yuling/Desktop/UHF_GS_CSP-term software_16 May 2023_auto client addr/build/.conf_check_7a459d0d316cb90d7b9cb20106ec9182/testbuild/test.c.1.o']
-[2/2] Linking [33mbuild/.conf_check_7a459d0d316cb90d7b9cb20106ec9182/testbuild/testprog[0m
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="99d57b0"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '-DCSP_HAVE_STDBOOL_H=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_be2c174121021f214516a9c552d8ebe3/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_be2c174121021f214516a9c552d8ebe3/testbuild/testprog[0m
 
-['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/yuling/Desktop/UHF_GS_CSP-term software_16 May 2023_auto client addr/build/.conf_check_7a459d0d316cb90d7b9cb20106ec9182/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-lsocketcan']
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_be2c174121021f214516a9c552d8ebe3/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-lsocketcan']
 yes
 (tool gcc is already loaded, skipping)
 (tool gcc is already loaded, skipping)
@@ -114,10 +114,10 @@ int use_ebcdic (int i) {
 extern int foo;
 
 <==
-[1/2] Compiling [32mbuild/.conf_check_d5e0aa875c61c2adc87270c7e7bfdceb/test.c[0m
+[1/2] Compiling [32mbuild/.conf_check_97ca8630921b593544de31b5edb32d85/test.c[0m
 
-['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DLOG_CDH="1"', '-DRTC_ENABLED=1', '../test.c', '-c', '-o', '/home/yuling/Desktop/UHF_GS_CSP-term software_16 May 2023_auto client addr/build/.conf_check_d5e0aa875c61c2adc87270c7e7bfdceb/testbuild/test.c.1.o']
-[2/2] Processing [35mbuild/.conf_check_d5e0aa875c61c2adc87270c7e7bfdceb/testbuild/test.c.1.o[0m
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DLOG_CDH="1"', '-DRTC_ENABLED=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_97ca8630921b593544de31b5edb32d85/testbuild/test.c.1.o']
+[2/2] Processing [35mbuild/.conf_check_97ca8630921b593544de31b5edb32d85/testbuild/test.c.1.o[0m
 
 little
 (tool gcc is already loaded, skipping)
@@ -132,12 +132,12 @@ int main(int argc, char **argv) {
 }
 
 <==
-[1/2] Compiling [32mbuild/.conf_check_c23305ea8c871df066b2d9c5c60ed801/test.c[0m
+[1/2] Compiling [32mbuild/.conf_check_000b9baefa43db41b8b9989e7d6e817b/test.c[0m
 
-['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DCONSOLE_HISTORY_ENABLE=1', '-DCONSOLE_HISTORY_ELEMENTS=10', '-DCONSOLE_BUFSIZ=100', '../test.c', '-c', '-o', '/home/yuling/Desktop/UHF_GS_CSP-term software_16 May 2023_auto client addr/build/.conf_check_c23305ea8c871df066b2d9c5c60ed801/testbuild/test.c.1.o']
-[2/2] Linking [33mbuild/.conf_check_c23305ea8c871df066b2d9c5c60ed801/testbuild/testprog[0m
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DCONSOLE_HISTORY_ENABLE=1', '-DCONSOLE_HISTORY_ELEMENTS=10', '-DCONSOLE_BUFSIZ=100', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_000b9baefa43db41b8b9989e7d6e817b/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_000b9baefa43db41b8b9989e7d6e817b/testbuild/testprog[0m
 
-['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/yuling/Desktop/UHF_GS_CSP-term software_16 May 2023_auto client addr/build/.conf_check_c23305ea8c871df066b2d9c5c60ed801/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_000b9baefa43db41b8b9989e7d6e817b/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 (tool gcc is already loaded, skipping)
 ----------------------------------------
@@ -151,12 +151,12 @@ int main(int argc, char **argv) {
 }
 
 <==
-[1/2] Compiling [32mbuild/.conf_check_06ea040abc0685875197b006d9c88386/test.c[0m
+[1/2] Compiling [32mbuild/.conf_check_e4f01e82d809c68d7cc6906850f704c7/test.c[0m
 
-['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DENABLE_FTP_FILE_BACKEND=1', '-DENABLE_FTP_CLIENT=1', '../test.c', '-c', '-o', '/home/yuling/Desktop/UHF_GS_CSP-term software_16 May 2023_auto client addr/build/.conf_check_06ea040abc0685875197b006d9c88386/testbuild/test.c.1.o']
-[2/2] Linking [33mbuild/.conf_check_06ea040abc0685875197b006d9c88386/testbuild/testprog[0m
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DENABLE_FTP_FILE_BACKEND=1', '-DENABLE_FTP_CLIENT=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_e4f01e82d809c68d7cc6906850f704c7/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_e4f01e82d809c68d7cc6906850f704c7/testbuild/testprog[0m
 
-['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/yuling/Desktop/UHF_GS_CSP-term software_16 May 2023_auto client addr/build/.conf_check_06ea040abc0685875197b006d9c88386/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_e4f01e82d809c68d7cc6906850f704c7/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ----------------------------------------
 Clients included:
