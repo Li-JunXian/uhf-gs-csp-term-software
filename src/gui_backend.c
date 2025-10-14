@@ -418,15 +418,10 @@ static void gui_backend_handle_set_rotator(struct gui_backend_client *client,
         gui_backend_send(client, "ERROR Invalid azimuth/elevation\n");
         return;
     }
+    printf("[GUI_backend] serial_set_az_el(%ld, %ld)\n", azimuth, elevation);
 
-    int success = serial_set_az_el((int)azimuth, (int)elevation);
-    if (!success)
-    {
-        gui_backend_send(client, "ERROR Rotator command failed\n");
-        return;
-    }
+    serial_set_az_el((int)azimuth, (int)elevation);
 
-    gui_backend_send_fmt(client, "OK ROTATOR %ld %ld\n", azimuth, elevation);
 }
 
 static int gui_backend_hex_to_bytes(const char *hex, uint8_t **buffer_out, size_t *length_out)
@@ -536,7 +531,7 @@ static void gui_backend_handle_get_events(struct gui_backend_client *client, con
         {
             gui_backend_send(client, "ERROR Invalid event count\n");
             return;
-        }
+        }send_packet;
         limit = (size_t)value;
     }
 
@@ -656,17 +651,17 @@ static void gui_backend_handle_command(struct gui_backend_client *client, const 
     {
         gui_backend_handle_set_freq(client, token_count > 1 ? tokens[1] : NULL, 0);
     }
-    else if (strcasecmp(cmd, "SET_ROTATOR") == 0)
+    else if (strcasecmp(cmd, "SET_AZEL") == 0)
     {
         gui_backend_handle_set_rotator(client,
                                        token_count > 1 ? tokens[1] : NULL,
                                        token_count > 2 ? tokens[2] : NULL);
     }
-    else if (strcasecmp(cmd, "SEND_PACKET") == 0)
+    /**else if (strcasecmp(cmd, "SET_") == 0)
     {
         gui_backend_handle_send_packet(client, tokens, token_count);
     }
-    else if (strcasecmp(cmd, "GET_EVENTS") == 0)
+    **/else if (strcasecmp(cmd, "GET_EVENTS") == 0)
     {
         gui_backend_handle_get_events(client, token_count > 1 ? tokens[1] : NULL);
     }

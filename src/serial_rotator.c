@@ -123,7 +123,7 @@ int serial_read()
 		log_info("GS232B serial port (%s) connected", port);
 	}
 
-	if (set_interface(fd, B4800, 0) != 0)  // set speed to 9600 bps, 8n1 (no parity)
+	if (set_interface(fd, B9600, 0) != 0)  // set speed to 9600 bps, 8n1 (no parity)
 	{
 		log_error("error interface setup");
 		return 0;
@@ -152,9 +152,10 @@ int serial_read()
 		close(fd);
 		return 0;
 	}
-	char hex_buf[3 * sizeof(buf) + 1];
-	bytes_to_hex((unsigned char *)buf, (size_t)rd, hex_buf, sizeof(hex_buf));
-	log_info("Receive %d bytes: %s",rd, hex_buf);
+	// char hex_buf[3 * sizeof(buf) + 1];
+	// bytes_to_hex((unsigned char *)buf, (size_t)rd, hex_buf, sizeof(hex_buf));
+	// log_info("Receive %d bytes: %s",rd, hex_buf);
+        log_info("Receive %d bytes: %s",rd, buf);
 
 	close(fd);
 
@@ -195,7 +196,7 @@ int serial_set_az_el(int azi,int ele)
 		return 0;
 	}
 
-	if (set_interface(fd, B4800, 0) != 0)  // set speed to 9600 bps, 8n1 (no parity)
+	if (set_interface(fd, B9600, 0) != 0)  // set speed to 9600 bps, 8n1 (no parity)
 	{
 		log_error("error interface setup");
 		return 0;
