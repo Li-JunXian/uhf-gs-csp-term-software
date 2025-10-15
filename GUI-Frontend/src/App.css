@@ -54,7 +54,7 @@ body {
 
 #inputForm {
   position:absolute;
-  top: 0;
+  top: 86;
   left: 0;
   z-index: 10;
   padding-left: 8px;
@@ -63,5 +63,7 @@ body {
 }
 
 #selector {
+  display: flex;
+  flex-direction: column;
   padding-left: 8px;
 }
