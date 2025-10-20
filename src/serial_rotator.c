@@ -207,15 +207,20 @@ int serial_set_az_el(int azi,int ele)
 	char set_az_el[] = "W150 000\r"; //default antenna orientation
 
 	int wr = 0;
-	
+
 	sprintf(set_az_el+1,"%03d %03d\r", azi+AZIMMUTH_ANGLE_OFFSET, ele);
 
 
 	log_info("%s",set_az_el);
 	wr = write(fd,&set_az_el,sizeof(set_az_el)-1);
-	if (wr == 0)
+	if (wr == 0) {
 		log_error("Setting AZ:%d EL%d failed",azi,ele);
-
+	} else if (wr > 0) {
+		gui_backend_notify_rotator(azi, ele, 1);
+	} else {
+		gui_backend_notify_rotator(azi, ele, 0);
+	}
+	
 	close(fd);
 
 	return 1;

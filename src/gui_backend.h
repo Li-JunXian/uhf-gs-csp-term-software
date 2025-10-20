@@ -4,10 +4,46 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <pthread.h>
+#include <time.h>
+
+#define GUI_BACKEND_MAX_PASSES 16
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef enum {
+        GUI_BACKEND_MODE_IDLE,
+        GUI_BACKEND_MODE_TRACKING,
+        GUI_BACKEND_MODE_MAINTENANCE
+} gui_backend_mode_t;
+
+typedef struct {
+        char name[32];
+        time_t aos_utc;
+        time_t los_utc;
+        uint16_t duration_sec;
+        uint16_t peak_elevation_deg;
+} gui_backend_pass_t;
+
+void gui_backend_set_station_info(const char *name, double lat_deg, double lon_deg, double alt_m,
+                                  double true_north_deg);
+void gui_backend_set_mode(gui_backend_mode_t mode);
+void gui_backend_set_emergency_stop(int engaged);
+void gui_backend_update_pass_schedule(const gui_backend_pass_t *passes, size_t count);
+
+typedef struct {
+        uint32_t norad_id;
+        double lat_deg;
+        double lon_deg;
+        double alt_km;
+        double velocity_km_s;
+        double range_km;
+        double range_rate_km_s;
+        time_t tle_epoch;
+} gui_backend_satellite_t;
+
+void gui_backend_update_satellite(const gui_backend_satellite_t *satellite);
 
 /** GUI backend event types used for telemetry streaming. */
 typedef enum {

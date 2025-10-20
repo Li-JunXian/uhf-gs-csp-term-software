@@ -9,9 +9,11 @@
 
 #include <command/command.h>
 #include <time.h>
+#include <math.h>
 #include "predict.h"
 #include "serial_rotator.h"
 #include "doppler_freq_correction.h"
+#include "gui_backend.h"
 
 /* GS100/AX100 configuration parameter*/
 #define AX100_PORT_RPARAM	7	/* task_server remote param port */
@@ -317,6 +319,20 @@ void doppler_init()
 
 	while (1)
 	{			
+		#define GUI_BACKEND_MAX_PASSES 10
+		gui_backend_pass_t passes[GUI_BACKEND_MAX_PASSES];
+		int idx = 0;
+		const char *sat_name = "Lumelite 4"; // Replace with actual satellite name if available
+		passes[idx++] = (gui_backend_pass_t){
+			.name = sat_name,
+			.aos_utc = time_aos,
+			.los_utc = time_los,
+			.duration_sec = (uint16_t)(time_los - time_aos),
+			.peak_elevation_deg = (uint16_t)ele_m,
+		};
+		gui_backend_update_pass_schedule(passes, idx);
+
+
 		/* Estimate next ground pass AOS and LOS time*/
 		set_calc_time(tnow - (TNOW_OFFSET));
 		PreCalc();
@@ -405,6 +421,28 @@ static void doppler_tracking(int txfreq, int rxfreq, uint32_t tnow)
 
 	/* Repetively calculate and update the sat info */	
 	Calc();
+
+sat_info_t info = {};
+getSatInfo(&info);
+
+// Define and assign tle_epoch_time from sat_info or set to 0 if unavailable
+uint32_t tle_epoch_time = 0;
+#ifdef HAVE_TLE_EPOCH_IN_SAT_INFO
+tle_epoch_time = info.tle_epoch;
+#endif
+
+gui_backend_satellite_t sat_info_struct = {
+	.norad_id = sat_no, // Use sat_no or the correct NORAD ID variable
+	.lat_deg = info.sat_lat,
+	.lon_deg = info.sat_lon,
+	.alt_km = info.sat_alt,
+	.velocity_km_s = info.sat_vel,
+	.range_km = info.sat_range,
+	.range_rate_km_s = info.sat_range_rate,
+	.tle_epoch = tle_epoch_time
+};
+gui_backend_update_satellite(&sat_info_struct);
+
 	
 	/* Get ground pass parameter */
 	double az = get_azi();

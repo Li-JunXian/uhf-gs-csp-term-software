@@ -9,8 +9,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -66,11 +68,88 @@ struct gui_backend_state
     int last_rotator_azimuth;
     int last_rotator_elevation;
     int last_rotator_success;
+    
+    char station_name[64];
+    double station_lat;
+    double station_lon;
+    double station_alt_m;
+    double station_true_north_deg;
+    gui_backend_mode_t station_mode;
+    int emergency_stop_engaged;
+    time_t last_status_utc;
+    char last_status_local[32];
+    struct {
+        double az_deg;
+        double el_deg;
+        int last_command_success;
+    } antenna;
+    struct {
+        int tx_freq_hz;
+        int rx_freq_hz;
+    } rf;
+    struct {
+        uint32_t norad_id;
+        double lat_deg;
+        double lon_deg;
+        double alt_km;
+        double velocity_km_s;
+        double range_km;
+        double range_rate_km_s;
+        time_t tle_epoch;
+    } satellite;
+    struct {
+        size_t count;
+        gui_backend_pass_t passes[GUI_BACKEND_MAX_PASSES];
+    } pass_schedule;
 };
 
 static struct gui_backend_state gui_state = {
     .lock = PTHREAD_MUTEX_INITIALIZER,
 };
+
+typedef struct
+{
+    double az_deg;
+    double el_deg;
+    int last_command_success;
+} gui_backend_snapshot_antenna_t;
+
+typedef struct
+{
+    int tx_freq_hz;
+    int rx_freq_hz;
+} gui_backend_snapshot_rf_t;
+
+typedef struct
+{
+    uint32_t norad_id;
+    double lat_deg;
+    double lon_deg;
+    double alt_km;
+    double velocity_km_s;
+    double range_km;
+    double range_rate_km_s;
+    time_t tle_epoch;
+    long tle_age_sec;
+} gui_backend_snapshot_satellite_t;
+
+typedef struct
+{
+    char station_name[64];
+    gui_backend_mode_t station_mode;
+    int emergency_stop_engaged;
+    double station_lat;
+    double station_lon;
+    double station_alt_m;
+    double station_true_north_deg;
+    char utc_iso[32];
+    char local_iso[32];
+    gui_backend_snapshot_antenna_t antenna;
+    gui_backend_snapshot_rf_t rf;
+    gui_backend_snapshot_satellite_t sat;
+    char passes_json[512];
+    char faults_json[512];
+} gui_backend_snapshot_t;
 
 static void *gui_backend_thread(void *arg);
 static void gui_backend_push_event(gui_backend_event_type_t type, const char *origin,
@@ -81,6 +160,16 @@ static void gui_backend_send_fmt(struct gui_backend_client *client, const char *
 static void gui_backend_process_buffer(struct gui_backend_client *client);
 static void gui_backend_close_client(struct gui_backend_client *client);
 static void gui_backend_format_time(const struct timespec *ts, char *buf, size_t buf_len);
+static void gui_backend_snapshot(gui_backend_snapshot_t *snap);
+static void gui_backend_send_status_payload(struct gui_backend_client *client,
+                                            const gui_backend_snapshot_t *snap,
+                                            const char *message_type,
+                                            int include_header);
+static void gui_backend_emit_status_to_all(struct gui_backend_client *clients,
+                                           size_t client_count);
+static const char *gui_backend_mode_to_string(gui_backend_mode_t mode);
+static gui_backend_mode_t gui_backend_mode_from_string(const char *value);
+static const char *gui_backend_event_type_to_string(gui_backend_event_type_t type);
 
 int gui_backend_start(pthread_t *thread)
 {
@@ -165,6 +254,9 @@ void gui_backend_notify_downlink(const char *origin, const char *file_path, size
 void gui_backend_notify_rotator(int azimuth, int elevation, int success)
 {
     pthread_mutex_lock(&gui_state.lock);
+    gui_state.antenna.az_deg = azimuth;
+    gui_state.antenna.el_deg = elevation;
+    gui_state.antenna.last_command_success = success;
     gui_state.last_rotator_azimuth = azimuth;
     gui_state.last_rotator_elevation = elevation;
     gui_state.last_rotator_success = success;
@@ -175,6 +267,110 @@ void gui_backend_notify_rotator(int azimuth, int elevation, int success)
              success ? "success" : "failed");
     gui_backend_push_event(success ? GUI_BACKEND_EVENT_INFO : GUI_BACKEND_EVENT_ERROR,
                            "ROTATOR", "Rotator command", detail);
+}
+
+void gui_backend_set_station_info(const char *name, double lat_deg, double lon_deg, double alt_m,
+                                  double true_north_deg)
+{
+    time_t now = time(NULL);
+    struct tm tm_local;
+    char local_iso[sizeof(gui_state.last_status_local)] = "";
+    if (localtime_r(&now, &tm_local) != NULL)
+    {
+        strftime(local_iso, sizeof(local_iso), "%Y-%m-%dT%H:%M:%S", &tm_local);
+    }
+
+    char applied_name[sizeof(gui_state.station_name)];
+    pthread_mutex_lock(&gui_state.lock);
+    if (name != NULL)
+    {
+        strncpy(gui_state.station_name, name, sizeof(gui_state.station_name) - 1);
+        gui_state.station_name[sizeof(gui_state.station_name) - 1] = '\0';
+    }
+    strncpy(applied_name, gui_state.station_name, sizeof(applied_name) - 1);
+    applied_name[sizeof(applied_name) - 1] = '\0';
+    gui_state.station_lat = lat_deg;
+    gui_state.station_lon = lon_deg;
+    gui_state.station_alt_m = alt_m;
+    gui_state.station_true_north_deg = true_north_deg;
+    gui_state.last_status_utc = now;
+    strncpy(gui_state.last_status_local, local_iso, sizeof(gui_state.last_status_local) - 1);
+    gui_state.last_status_local[sizeof(gui_state.last_status_local) - 1] = '\0';
+    pthread_mutex_unlock(&gui_state.lock);
+
+    gui_backend_push_event(GUI_BACKEND_EVENT_INFO, "GUI", "Station info update", applied_name);
+}
+
+void gui_backend_set_mode(gui_backend_mode_t mode)
+{
+    gui_backend_mode_t previous;
+    pthread_mutex_lock(&gui_state.lock);
+    previous = gui_state.station_mode;
+    gui_state.station_mode = mode;
+    pthread_mutex_unlock(&gui_state.lock);
+
+    if (previous != mode)
+    {
+        gui_backend_push_event(GUI_BACKEND_EVENT_INFO, "GUI", "Station mode",
+                               gui_backend_mode_to_string(mode));
+    }
+}
+
+void gui_backend_set_emergency_stop(int engaged)
+{
+    int previous;
+    int new_value = engaged ? 1 : 0;
+    pthread_mutex_lock(&gui_state.lock);
+    previous = gui_state.emergency_stop_engaged;
+    gui_state.emergency_stop_engaged = new_value;
+    pthread_mutex_unlock(&gui_state.lock);
+
+    if (previous != new_value)
+    {
+        gui_backend_push_event(new_value ? GUI_BACKEND_EVENT_ERROR : GUI_BACKEND_EVENT_INFO,
+                               "GUI", "Emergency stop",
+                               new_value ? "ENGAGED" : "CLEARED");
+    }
+}
+
+void gui_backend_update_pass_schedule(const gui_backend_pass_t *passes, size_t count)
+{
+    if (passes == NULL)
+    {
+        return;
+    }
+
+    if (count > GUI_BACKEND_MAX_PASSES)
+    {
+        count = GUI_BACKEND_MAX_PASSES;
+    }
+
+    pthread_mutex_lock(&gui_state.lock);
+    gui_state.pass_schedule.count = count;
+    for (size_t i = 0; i < count; ++i)
+    {
+        gui_state.pass_schedule.passes[i] = passes[i];
+    }
+    pthread_mutex_unlock(&gui_state.lock);
+}
+
+void gui_backend_update_satellite(const gui_backend_satellite_t *satellite)
+{
+    if (satellite == NULL)
+    {
+        return;
+    }
+
+    pthread_mutex_lock(&gui_state.lock);
+    gui_state.satellite.norad_id = satellite->norad_id;
+    gui_state.satellite.lat_deg = satellite->lat_deg;
+    gui_state.satellite.lon_deg = satellite->lon_deg;
+    gui_state.satellite.alt_km = satellite->alt_km;
+    gui_state.satellite.velocity_km_s = satellite->velocity_km_s;
+    gui_state.satellite.range_km = satellite->range_km;
+    gui_state.satellite.range_rate_km_s = satellite->range_rate_km_s;
+    gui_state.satellite.tle_epoch = satellite->tle_epoch;
+    pthread_mutex_unlock(&gui_state.lock);
 }
 
 static void gui_backend_push_event(gui_backend_event_type_t type, const char *origin,
@@ -245,6 +441,270 @@ static void gui_backend_send_fmt(struct gui_backend_client *client, const char *
     gui_backend_send(client, buffer);
 }
 
+static void gui_backend_snapshot(gui_backend_snapshot_t *snap)
+{
+    if (snap == NULL)
+    {
+        return;
+    }
+
+    memset(snap, 0, sizeof(*snap));
+
+    gui_backend_pass_t passes[GUI_BACKEND_MAX_PASSES];
+    size_t pass_count = 0;
+    gui_backend_snapshot_satellite_t sat_state = {0};
+    gui_backend_snapshot_antenna_t antenna_state = {0};
+    gui_backend_snapshot_rf_t rf_state = {0};
+    gui_backend_mode_t station_mode = GUI_BACKEND_MODE_IDLE;
+    int emergency_stop_engaged = 0;
+    double station_lat = 0.0;
+    double station_lon = 0.0;
+    double station_alt_m = 0.0;
+    double station_true_north = 0.0;
+    char station_name[sizeof(gui_state.station_name)] = "";
+    time_t last_status_utc = 0;
+    char last_status_local[sizeof(gui_state.last_status_local)] = "";
+
+    pthread_mutex_lock(&gui_state.lock);
+    pass_count = gui_state.pass_schedule.count;
+    if (pass_count > GUI_BACKEND_MAX_PASSES)
+    {
+        pass_count = GUI_BACKEND_MAX_PASSES;
+    }
+    if (pass_count > 0)
+    {
+        memcpy(passes, gui_state.pass_schedule.passes,
+               pass_count * sizeof(gui_backend_pass_t));
+    }
+    sat_state.norad_id = gui_state.satellite.norad_id;
+    sat_state.lat_deg = gui_state.satellite.lat_deg;
+    sat_state.lon_deg = gui_state.satellite.lon_deg;
+    sat_state.alt_km = gui_state.satellite.alt_km;
+    sat_state.velocity_km_s = gui_state.satellite.velocity_km_s;
+    sat_state.range_km = gui_state.satellite.range_km;
+    sat_state.range_rate_km_s = gui_state.satellite.range_rate_km_s;
+    sat_state.tle_epoch = gui_state.satellite.tle_epoch;
+
+    antenna_state = (gui_backend_snapshot_antenna_t){
+        .az_deg = gui_state.antenna.az_deg,
+        .el_deg = gui_state.antenna.el_deg,
+        .last_command_success = gui_state.antenna.last_command_success,
+    };
+    rf_state = (gui_backend_snapshot_rf_t){
+        .tx_freq_hz = gui_state.rf.tx_freq_hz,
+        .rx_freq_hz = gui_state.rf.rx_freq_hz,
+    };
+    station_mode = gui_state.station_mode;
+    emergency_stop_engaged = gui_state.emergency_stop_engaged;
+    station_lat = gui_state.station_lat;
+    station_lon = gui_state.station_lon;
+    station_alt_m = gui_state.station_alt_m;
+    station_true_north = gui_state.station_true_north_deg;
+    strncpy(station_name, gui_state.station_name, sizeof(station_name) - 1);
+    station_name[sizeof(station_name) - 1] = '\0';
+    last_status_utc = gui_state.last_status_utc;
+    strncpy(last_status_local, gui_state.last_status_local,
+            sizeof(last_status_local) - 1);
+    last_status_local[sizeof(last_status_local) - 1] = '\0';
+    pthread_mutex_unlock(&gui_state.lock);
+
+    time_t now = time(NULL);
+    sat_state.tle_age_sec = (sat_state.tle_epoch > 0)
+                                ? (long)difftime(now, sat_state.tle_epoch)
+                                : 0;
+
+    strncpy(snap->station_name, station_name, sizeof(snap->station_name) - 1);
+    snap->station_name[sizeof(snap->station_name) - 1] = '\0';
+    snap->station_mode = station_mode;
+    snap->emergency_stop_engaged = emergency_stop_engaged;
+    snap->station_lat = station_lat;
+    snap->station_lon = station_lon;
+    snap->station_alt_m = station_alt_m;
+    snap->station_true_north_deg = station_true_north;
+    snap->antenna = antenna_state;
+    snap->rf = rf_state;
+    snap->sat = sat_state;
+
+    time_t utc_ref = (last_status_utc != 0) ? last_status_utc : now;
+    struct tm tm_utc;
+    if (gmtime_r(&utc_ref, &tm_utc) != NULL)
+    {
+        strftime(snap->utc_iso, sizeof(snap->utc_iso), "%Y-%m-%dT%H:%M:%SZ", &tm_utc);
+    }
+    else
+    {
+        snap->utc_iso[0] = '\0';
+    }
+
+    if (last_status_local[0] != '\0')
+    {
+        strncpy(snap->local_iso, last_status_local, sizeof(snap->local_iso) - 1);
+        snap->local_iso[sizeof(snap->local_iso) - 1] = '\0';
+    }
+    else
+    {
+        struct tm tm_local;
+        if (localtime_r(&utc_ref, &tm_local) != NULL)
+        {
+            strftime(snap->local_iso, sizeof(snap->local_iso), "%Y-%m-%dT%H:%M:%S",
+                     &tm_local);
+        }
+        else
+        {
+            snap->local_iso[0] = '\0';
+        }
+    }
+
+    /* Build pass schedule JSON */
+    size_t offset = 0;
+    size_t remaining = sizeof(snap->passes_json);
+    if (remaining > 0)
+    {
+        offset = snprintf(snap->passes_json, remaining, "[");
+        if (offset >= remaining)
+        {
+            snap->passes_json[sizeof(snap->passes_json) - 1] = '\0';
+        }
+        else
+        {
+            for (size_t i = 0; i < pass_count && offset < remaining; ++i)
+            {
+                char aos_iso[32] = "";
+                char los_iso[32] = "";
+                struct tm tm_pass;
+                if (gmtime_r(&passes[i].aos_utc, &tm_pass) != NULL)
+                {
+                    strftime(aos_iso, sizeof(aos_iso), "%Y-%m-%dT%H:%M:%SZ", &tm_pass);
+                }
+                if (gmtime_r(&passes[i].los_utc, &tm_pass) != NULL)
+                {
+                    strftime(los_iso, sizeof(los_iso), "%Y-%m-%dT%H:%M:%SZ", &tm_pass);
+                }
+
+                int written = snprintf(
+                    snap->passes_json + offset,
+                    remaining - offset,
+                    "{\"name\":\"%s\",\"aos\":\"%s\",\"los\":\"%s\",\"duration_sec\":%u,"
+                    "\"peak_elevation_deg\":%u}%s",
+                    passes[i].name,
+                    aos_iso,
+                    los_iso,
+                    passes[i].duration_sec,
+                    passes[i].peak_elevation_deg,
+                    (i + 1 < pass_count) ? "," : "");
+                if (written < 0 || (size_t)written >= remaining - offset)
+                {
+                    offset = remaining - 1;
+                    break;
+                }
+                offset += (size_t)written;
+            }
+            if (offset < remaining)
+            {
+                if (pass_count > 0)
+                {
+                    int append = snprintf(snap->passes_json + offset,
+                                          remaining - offset, "]");
+                    if (append > 0)
+                    {
+                        offset += (size_t)append;
+                    }
+                }
+                else
+                {
+                    snprintf(snap->passes_json + offset, remaining - offset, "]");
+                }
+            }
+            snap->passes_json[sizeof(snap->passes_json) - 1] = '\0';
+        }
+    }
+
+    if (pass_count == 0)
+    {
+        strncpy(snap->passes_json, "[]", sizeof(snap->passes_json) - 1);
+        snap->passes_json[sizeof(snap->passes_json) - 1] = '\0';
+    }
+    else
+    {
+        if (strchr(snap->passes_json, ']') == NULL)
+        {
+            strncpy(snap->passes_json, "[]", sizeof(snap->passes_json) - 1);
+            snap->passes_json[sizeof(snap->passes_json) - 1] = '\0';
+        }
+    }
+
+    strncpy(snap->faults_json, "[]", sizeof(snap->faults_json) - 1);
+    snap->faults_json[sizeof(snap->faults_json) - 1] = '\0';
+}
+
+static void gui_backend_send_status_payload(struct gui_backend_client *client,
+                                            const gui_backend_snapshot_t *snap,
+                                            const char *message_type,
+                                            int include_header)
+{
+    if (client == NULL || snap == NULL || message_type == NULL)
+    {
+        return;
+    }
+
+    if (include_header)
+    {
+        gui_backend_send(client, "OK STATUS\n");
+    }
+
+    gui_backend_send_fmt(
+        client,
+        "{\"type\":\"%s\",\"station\":{\"name\":\"%s\",\"mode\":\"%s\","
+        "\"emergency_stop\":%s,\"lat\":%.6f,\"lon\":%.6f,\"alt_m\":%.1f,"
+        "\"true_north_deg\":%.2f,\"time_utc\":\"%s\",\"time_local\":\"%s\"},"
+        "\"antenna\":{\"az_deg\":%.2f,\"el_deg\":%.2f,\"last_command_success\":%s},"
+        "\"rf\":{\"tx_hz\":%d,\"rx_hz\":%d},"
+        "\"satellite\":{\"norad\":%u,\"lat_deg\":%.3f,\"lon_deg\":%.3f,"
+        "\"alt_km\":%.2f,\"velocity_km_s\":%.3f,\"range_km\":%.2f,"
+        "\"range_rate_km_s\":%.3f,\"tle_age_sec\":%ld},"
+        "\"passes\":%s,"
+        "\"faults\":%s}\n",
+        message_type,
+        snap->station_name,
+        gui_backend_mode_to_string(snap->station_mode),
+        snap->emergency_stop_engaged ? "true" : "false",
+        snap->station_lat, snap->station_lon, snap->station_alt_m,
+        snap->station_true_north_deg, snap->utc_iso, snap->local_iso,
+        snap->antenna.az_deg, snap->antenna.el_deg,
+        snap->antenna.last_command_success ? "true" : "false",
+        snap->rf.tx_freq_hz, snap->rf.rx_freq_hz,
+        snap->sat.norad_id, snap->sat.lat_deg, snap->sat.lon_deg,
+        snap->sat.alt_km, snap->sat.velocity_km_s,
+        snap->sat.range_km, snap->sat.range_rate_km_s,
+        snap->sat.tle_age_sec,
+        snap->passes_json,
+        snap->faults_json);
+
+    if (include_header)
+    {
+        gui_backend_send(client, "END\n");
+    }
+}
+
+static void gui_backend_emit_status_to_all(struct gui_backend_client *clients,
+                                           size_t client_count)
+{
+    if (clients == NULL || client_count == 0)
+    {
+        return;
+    }
+
+    gui_backend_snapshot_t snap;
+    gui_backend_snapshot(&snap);
+    for (size_t i = 0; i < client_count; ++i)
+    {
+        if (clients[i].fd >= 0)
+        {
+            gui_backend_send_status_payload(&clients[i], &snap, "telemetry", 0);
+        }
+    }
+}
+
 static void gui_backend_print_help(struct gui_backend_client *client)
 {
     gui_backend_send(client, "OK HELP\n");
@@ -253,7 +713,7 @@ static void gui_backend_print_help(struct gui_backend_client *client)
     gui_backend_send(client, "SET_SAT <id> - select satellite number\n");
     gui_backend_send(client, "SET_TX <freq_hz> - set transmitter frequency\n");
     gui_backend_send(client, "SET_RX <freq_hz> - set receiver frequency\n");
-    gui_backend_send(client, "SET_ROTATOR <az_deg> <el_deg> - move antenna\n");
+    gui_backend_send(client, "SET_AZEL <az_deg> <el_deg> - move antenna\n");
     gui_backend_send(client, "SEND_PACKET <pri> <src> <dst> <dst_port> <src_port> <hmac> <xtea> <rdp> <crc> <hex_payload>\n");
     gui_backend_send(client, "LAST_UPLINK - show latest uplink summary\n");
     gui_backend_send(client, "LAST_DOWNLINK - show latest downlink summary\n");
@@ -280,68 +740,9 @@ static int gui_backend_parse_long(const char *token, long min, long max, long *v
 
 static void gui_backend_handle_status(struct gui_backend_client *client)
 {
-    int sat_no = mcs_sat_read();
-    int tx_freq = doppler_get_tx_freq();
-    int rx_freq = doppler_get_rx_freq();
-    char tle1[128] = "";
-    char tle2[128] = "";
-    doppler_get_tle(tle1, sizeof(tle1), tle2, sizeof(tle2));
-
-    char uplink_file[PATH_MAX];
-    char uplink_origin[32];
-    size_t uplink_bytes;
-    int uplink_success;
-
-    char downlink_file[PATH_MAX];
-    char downlink_origin[32];
-    size_t downlink_bytes;
-    uint8_t downlink_src;
-    uint8_t downlink_dst;
-
-    int rot_az;
-    int rot_el;
-    int rot_success;
-
-    pthread_mutex_lock(&gui_state.lock);
-    strncpy(uplink_file, gui_state.last_uplink_file, sizeof(uplink_file));
-    uplink_file[sizeof(uplink_file) - 1] = '\0';
-    strncpy(uplink_origin, gui_state.last_uplink_origin, sizeof(uplink_origin));
-    uplink_origin[sizeof(uplink_origin) - 1] = '\0';
-    uplink_bytes = gui_state.last_uplink_bytes;
-    uplink_success = gui_state.last_uplink_success;
-
-    strncpy(downlink_file, gui_state.last_downlink_file, sizeof(downlink_file));
-    downlink_file[sizeof(downlink_file) - 1] = '\0';
-    strncpy(downlink_origin, gui_state.last_downlink_origin, sizeof(downlink_origin));
-    downlink_origin[sizeof(downlink_origin) - 1] = '\0';
-    downlink_bytes = gui_state.last_downlink_bytes;
-    downlink_src = gui_state.last_downlink_src;
-    downlink_dst = gui_state.last_downlink_dst;
-
-    rot_az = gui_state.last_rotator_azimuth;
-    rot_el = gui_state.last_rotator_elevation;
-    rot_success = gui_state.last_rotator_success;
-    pthread_mutex_unlock(&gui_state.lock);
-
-    gui_backend_send(client, "OK STATUS\n");
-    gui_backend_send_fmt(client, "satellite=%d\n", sat_no);
-    gui_backend_send_fmt(client, "tx_freq=%d\n", tx_freq);
-    gui_backend_send_fmt(client, "rx_freq=%d\n", rx_freq);
-    gui_backend_send_fmt(client, "tle1=%s\n", tle1);
-    gui_backend_send_fmt(client, "tle2=%s\n", tle2);
-    gui_backend_send_fmt(client, "last_uplink_origin=%s\n", uplink_origin);
-    gui_backend_send_fmt(client, "last_uplink_file=%s\n", uplink_file);
-    gui_backend_send_fmt(client, "last_uplink_bytes=%zu\n", uplink_bytes);
-    gui_backend_send_fmt(client, "last_uplink_status=%s\n", uplink_success ? "success" : "failure");
-    gui_backend_send_fmt(client, "last_downlink_origin=%s\n", downlink_origin);
-    gui_backend_send_fmt(client, "last_downlink_file=%s\n", downlink_file);
-    gui_backend_send_fmt(client, "last_downlink_bytes=%zu\n", downlink_bytes);
-    gui_backend_send_fmt(client, "last_downlink_src=%u\n", downlink_src);
-    gui_backend_send_fmt(client, "last_downlink_dst=%u\n", downlink_dst);
-    gui_backend_send_fmt(client, "rotator_last_az=%d\n", rot_az);
-    gui_backend_send_fmt(client, "rotator_last_el=%d\n", rot_el);
-    gui_backend_send_fmt(client, "rotator_last_status=%s\n", rot_success ? "success" : "failure");
-    gui_backend_send(client, "END\n");
+    gui_backend_snapshot_t snap;
+    gui_backend_snapshot(&snap);
+    gui_backend_send_status_payload(client, &snap, "status", 1);
 }
 
 static void gui_backend_handle_set_sat(struct gui_backend_client *client, const char *token)
@@ -397,12 +798,23 @@ static void gui_backend_handle_set_freq(struct gui_backend_client *client, const
         return;
     }
 
+    pthread_mutex_lock(&gui_state.lock);
+    if (is_tx)
+    {
+        gui_state.rf.tx_freq_hz = (int)value;
+    }
+    else
+    {
+        gui_state.rf.rx_freq_hz = (int)value;
+    }
+    pthread_mutex_unlock(&gui_state.lock);
+
     gui_backend_push_event(GUI_BACKEND_EVENT_INFO, "GUI",
                            is_tx ? "Set TX frequency" : "Set RX frequency", token);
     gui_backend_send_fmt(client, "OK %s %ld\n", is_tx ? "TX" : "RX", value);
 }
 
-static void gui_backend_handle_set_rotator(struct gui_backend_client *client,
+static void gui_backend_handle_set_azel(struct gui_backend_client *client,
                                            const char *az_token, const char *el_token)
 {
     if (az_token == NULL || el_token == NULL)
@@ -531,7 +943,7 @@ static void gui_backend_handle_get_events(struct gui_backend_client *client, con
         {
             gui_backend_send(client, "ERROR Invalid event count\n");
             return;
-        }send_packet;
+        }
         limit = (size_t)value;
     }
 
@@ -557,8 +969,12 @@ static void gui_backend_handle_get_events(struct gui_backend_client *client, con
     {
         char timestamp[32];
         gui_backend_format_time(&events[i].timestamp, timestamp, sizeof(timestamp));
-        gui_backend_send_fmt(client, "%s %s %s | %s\n", timestamp,
-                             events[i].origin, events[i].summary, events[i].detail);
+        gui_backend_send_fmt(client, "%s %s %s | %s (%s)\n",
+                             timestamp,
+                             gui_backend_event_type_to_string(events[i].type),
+                             events[i].origin,
+                             events[i].summary,
+                             events[i].detail);
     }
     gui_backend_send(client, "END\n");
 }
@@ -627,6 +1043,7 @@ static void gui_backend_handle_command(struct gui_backend_client *client, const 
     }
 
     const char *cmd = tokens[0];
+
     if (strcasecmp(cmd, "PING") == 0)
     {
         gui_backend_send(client, "OK PONG\n");
@@ -638,6 +1055,29 @@ static void gui_backend_handle_command(struct gui_backend_client *client, const 
     else if (strcasecmp(cmd, "STATUS") == 0)
     {
         gui_backend_handle_status(client);
+    }
+    else if (strcasecmp(cmd, "SET_MODE") == 0)
+    {
+        if (token_count <= 1)
+        {
+            gui_backend_send(client, "ERROR Missing mode\n");
+            return;
+        }
+        gui_backend_set_mode(gui_backend_mode_from_string(tokens[1]));
+        gui_backend_send_fmt(client, "OK SET_MODE %s\n", tokens[1]);
+    }
+    else if (strcasecmp(cmd, "SET_EMERGENCY") == 0)
+    {
+        if (token_count <= 1)
+        {
+            gui_backend_send(client, "ERROR Missing emergency state\n");
+            return;
+        }
+        int engage = (strcasecmp(tokens[1], "true") == 0 ||
+                      strcasecmp(tokens[1], "1") == 0 ||
+                      strcasecmp(tokens[1], "on") == 0);
+        gui_backend_set_emergency_stop(engage);
+        gui_backend_send_fmt(client, "OK SET_EMERGENCY %s\n", engage ? "true" : "false");
     }
     else if (strcasecmp(cmd, "SET_SAT") == 0 || strcasecmp(cmd, "SET_SATELLITE") == 0)
     {
@@ -653,15 +1093,15 @@ static void gui_backend_handle_command(struct gui_backend_client *client, const 
     }
     else if (strcasecmp(cmd, "SET_AZEL") == 0)
     {
-        gui_backend_handle_set_rotator(client,
+        gui_backend_handle_set_azel(client,
                                        token_count > 1 ? tokens[1] : NULL,
                                        token_count > 2 ? tokens[2] : NULL);
     }
-    /**else if (strcasecmp(cmd, "SET_") == 0)
+    else if (strcasecmp(cmd, "SEND_PACKET") == 0)
     {
         gui_backend_handle_send_packet(client, tokens, token_count);
     }
-    **/else if (strcasecmp(cmd, "GET_EVENTS") == 0)
+    else if (strcasecmp(cmd, "GET_EVENTS") == 0)
     {
         gui_backend_handle_get_events(client, token_count > 1 ? tokens[1] : NULL);
     }
@@ -737,9 +1177,9 @@ static void *gui_backend_thread(void *arg)
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(GUI_BACKEND_PORT);
+   addr.sin_family = AF_INET;
+   addr.sin_addr.s_addr = INADDR_ANY;
+   addr.sin_port = htons(GUI_BACKEND_PORT);
 
     if (bind(server_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
     {
@@ -762,6 +1202,8 @@ static void *gui_backend_thread(void *arg)
         clients[i].size = 0;
     }
 
+    time_t last_broadcast = 0;
+
     while (1)
     {
         fd_set readfds;
@@ -781,7 +1223,25 @@ static void *gui_backend_thread(void *arg)
             }
         }
 
-        int ready = select(max_fd + 1, &readfds, NULL, NULL, NULL);
+        struct timeval timeout = {
+            .tv_sec = 1,
+            .tv_usec = 0,
+        };
+
+        int ready = select(max_fd + 1, &readfds, NULL, NULL, &timeout);
+
+        time_t now = time(NULL);
+        if (difftime(now, last_broadcast) >= 1.0)
+        {
+            gui_backend_emit_status_to_all(clients, GUI_BACKEND_MAX_CLIENTS);
+            last_broadcast = now;
+        }
+
+        if (ready == 0)
+        {
+            continue;
+        }
+
         if (ready < 0)
         {
             if (errno == EINTR)
@@ -857,4 +1317,60 @@ static void *gui_backend_thread(void *arg)
         gui_backend_close_client(&clients[i]);
     }
     return NULL;
+}
+
+static const char *gui_backend_mode_to_string(gui_backend_mode_t mode)
+{
+    switch (mode)
+    {
+        case GUI_BACKEND_MODE_IDLE:
+            return "IDLE";
+        case GUI_BACKEND_MODE_TRACKING:
+            return "TRACKING";
+        case GUI_BACKEND_MODE_MAINTENANCE:
+            return "MAINTENANCE";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+static gui_backend_mode_t gui_backend_mode_from_string(const char *value)
+{
+    if (value == NULL)
+    {
+        return GUI_BACKEND_MODE_IDLE;
+    }
+
+    if (strcasecmp(value, "tracking") == 0)
+    {
+        return GUI_BACKEND_MODE_TRACKING;
+    }
+    if (strcasecmp(value, "maintenance") == 0 ||
+        strcasecmp(value, "maint") == 0)
+    {
+        return GUI_BACKEND_MODE_MAINTENANCE;
+    }
+    if (strcasecmp(value, "idle") == 0)
+    {
+        return GUI_BACKEND_MODE_IDLE;
+    }
+
+    return GUI_BACKEND_MODE_IDLE;
+}
+
+static const char *gui_backend_event_type_to_string(gui_backend_event_type_t type)
+{
+    switch (type)
+    {
+        case GUI_BACKEND_EVENT_UPLINK:
+            return "UPLINK";
+        case GUI_BACKEND_EVENT_DOWNLINK:
+            return "DOWNLINK";
+        case GUI_BACKEND_EVENT_INFO:
+            return "INFO";
+        case GUI_BACKEND_EVENT_ERROR:
+            return "ERROR";
+        default:
+            return "UNKNOWN";
+    }
 }
