@@ -65,7 +65,11 @@ STLIB_MARKER = '-Wl,-Bstatic'
 STLIB_ST = '-l%s'
 USE = ['util', 'gosh', 'csp']
 USES_FTP = ['csp', 'util', 'gosh', 'storage']
+<<<<<<< HEAD
 cfg_files = ['/home/urop_student/uhf-gs-csp-term-software/build/include/conf_cspterm.h', '/home/urop_student/uhf-gs-csp-term-software/build/include/csp/csp_autoconfig.h', '/home/urop_student/uhf-gs-csp-term-software/build/include/conf_param.h', '/home/urop_student/uhf-gs-csp-term-software/build/include/conf_util.h', '/home/urop_student/uhf-gs-csp-term-software/build/include/conf_gosh.h', '/home/urop_student/uhf-gs-csp-term-software/build/include/conf_ftp.h', '/home/urop_student/uhf-gs-csp-term-software/build/include/conf_log.h']
+=======
+cfg_files = ['/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/include/conf_cspterm.h', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/include/csp/csp_autoconfig.h', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/include/conf_param.h', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/include/conf_util.h', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/include/conf_gosh.h', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/include/conf_ftp.h', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/include/conf_log.h']
+>>>>>>> donor/main
 cprogram_PATTERN = '%s'
 cshlib_PATTERN = 'lib%s.so'
 cstlib_PATTERN = 'lib%s.a'

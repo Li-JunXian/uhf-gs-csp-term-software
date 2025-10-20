@@ -242,12 +242,20 @@ class eclipse(Build.BuildContext):
 		if source_dirs:
 			sourceEntries = self.add(doc, config, 'sourceEntries')
 			for i in source_dirs:
+<<<<<<< HEAD
 				self.add(doc, sourceEntries, 'entry',
+=======
+				 self.add(doc, sourceEntries, 'entry',
+>>>>>>> donor/main
 							{'excluding': i,
 							'flags': 'VALUE_WORKSPACE_PATH|RESOLVED',
 							'kind': 'sourcePath',
 							'name': ''})
+<<<<<<< HEAD
 				self.add(doc, sourceEntries, 'entry',
+=======
+				 self.add(doc, sourceEntries, 'entry',
+>>>>>>> donor/main
 							{
 							'flags': 'VALUE_WORKSPACE_PATH|RESOLVED',
 							'kind': 'sourcePath',

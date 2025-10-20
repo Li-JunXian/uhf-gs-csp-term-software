@@ -14,8 +14,6 @@
 #include <pthread.h>
 #include <signal.h>
 #include <time.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 
 #include <conf_cspterm.h>
 #include <csp-term.h>
@@ -42,39 +40,10 @@
 #include <util/timestamp.h>
 #include <util/strtime.h>
 
-/* Create own command */
+/*Create own command */
 #include <command/command.h>
 
-#include <errno.h>
-#include "status_publisher.h"
-
-/* Path to FIFO */
-#define STATUS_FIFO "/tmp/gs-status-fifo"
-
-/* Call once at startup: */
-/**void status_publisher_init() {
-	// create (or re-create) the FIFO, 0666 so any user can read
-	unlink(STATUS_FIFO);
-	if (mkfifo(STATUS_FIFO, 0666) && errno != EEXIST) {
-		perror("mkfifo");
-		exit(1);
-	}
-}
-
-// Call whenever you have new state to broadcast:
-void status_publisher_send(const char *json) {
-    int fd = open(STATUS_FIFO, O_WRONLY | O_NONBLOCK);
-    if (fd < 0) return; // no reader yet
-    write(fd, json, strlen(json));
-    write(fd, "\n", 1);
-    close(fd);
-}*/
-
-// USART RX callback for KISS interface
-/**void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken) {
-	extern csp_iface_t csp_if_kiss;
-	csp_kiss_rx(&csp_if_kiss, buf, len, pxTaskWoken);
-}*/
+#include "gui_backend.h"
 
 //---------------------------------------------------------------------------------------------
 const vmem_t vmem_map[] = {{0}};
@@ -181,35 +150,28 @@ int main(int argc, char * argv[]) {
 	log_csp_init();
 	csp_rdp_set_opt(6, 30000, 16000, 1, 8000, 3);
 
-	/* Forward declaration for my_usart_rx */
-	//void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken);
-	
 	/**
 	 * KISS interface
 	 */
-		if (use_kiss == 1) {
-			static csp_iface_t csp_if_kiss;
-			static csp_kiss_handle_t csp_kiss_driver;
-			static const char * kiss_name = "KISS";
-			csp_route_set(CSP_DEFAULT_ROUTE, &csp_if_kiss, CSP_NODE_MAC);
-	
-			csp_kiss_init(&csp_if_kiss, &csp_kiss_driver, usart_putc, usart_insert, kiss_name);
-			struct usart_conf conf = {.device = device, .baudrate = baud};
-			usart_init(&conf);
-			void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken) {
-				csp_kiss_rx(&csp_if_kiss, buf, len, pxTaskWoken);
-			}
-			usart_set_callback(my_usart_rx);
-		}
+	if (use_kiss == 1) {
+		static csp_iface_t csp_if_kiss;
+		static csp_kiss_handle_t csp_kiss_driver;
+		static const char * kiss_name = "KISS";
+		csp_route_set(CSP_DEFAULT_ROUTE, &csp_if_kiss, CSP_NODE_MAC);
 
-	/* USART RX callback for KISS interface */
-	// Declaration only; definition moved outside main
-	//void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken);
-	
+		csp_kiss_init(&csp_if_kiss, &csp_kiss_driver, usart_putc, usart_insert, kiss_name);
+		struct usart_conf conf = {.device = device, .baudrate = baud};
+		usart_init(&conf);
+		void my_usart_rx(uint8_t * buf, int len, void * pxTaskWoken) {
+			csp_kiss_rx(&csp_if_kiss, buf, len, pxTaskWoken);
+		}
+		usart_set_callback(my_usart_rx);
+	}
+
 	/**
 	 * ZMQ interface
 	 */
-		if (use_zmq == 1) {
+	if (use_zmq == 1) {
 		csp_zmqhub_init(addr, zmqhost);
 		csp_route_set(CSP_DEFAULT_ROUTE, &csp_if_zmqhub, CSP_NODE_MAC);
 	}
@@ -227,31 +189,16 @@ int main(int argc, char * argv[]) {
 	 * liblog setup
 	 */
 	#define LOG_STORE_SIZE 0x200
-	
-	/* Call once at startup: */
-    	status_publisher_init();
+	static uint8_t buf[LOG_STORE_SIZE] = {};
+	log_store_init((vmemptr_t) buf, LOG_STORE_SIZE);
 
-	// Publish static info once:
-	status_publisher_send(
-		"{"
-		"\"type\":\"gs_info\","
-		"\"gs_name\":\"LumeliteGS\","
-		"\"lat\":1.3456,"
-		"\"lon\":103.6789,"
-		"\"alt\":15.0,"
-		"\"true_north_offset\":80"
-		"}"
-	);
-	
-	// Publish initial mode:
-    	status_publisher_send(
-		"{"
-		"\"type\":\"gs_mode\","
-		"\"mode\":\"Idle\""
-		"}"
-	);
+	/**
+	 * Parameter system
+	 */
+	param_index_set(0, (param_index_t) {.table = param_test, .count = PARAM_TEST_COUNT, .physaddr = malloc(PARAM_TEST_SIZE), .size = PARAM_TEST_SIZE});
 
-	 /* Tasks
+	/**
+	 * Tasks
 	 */
 
 	/* Router */
@@ -277,6 +224,15 @@ int main(int argc, char * argv[]) {
 	void * tcp_server();
 	static pthread_t handle_tcp;
 	pthread_create(&handle_tcp, NULL, tcp_server, NULL);
+
+	/* GUI backend thread */
+	static pthread_t handle_gui_backend;
+	int gui_backend_started = 0;
+	if (gui_backend_start(&handle_gui_backend) != 0) {
+		log_error("[GUI Backend] startup failed");
+	} else {
+		gui_backend_started = 1;
+	}
 	
 	/* Debug console thread */
 	command_init();
@@ -288,9 +244,12 @@ int main(int argc, char * argv[]) {
 	/* Wait here for console to end */
 	pthread_join(handle_console, NULL);
 	pthread_join(handle_server, NULL);
-	pthread_join(handle_doppler, NULL);						// (Disable antenna tracking)
+	pthread_join(handle_doppler, NULL);					// (Disable antenna tracking)
 	pthread_join(handle_tleupdate, NULL);					// (Disable antenna tracking)
 	pthread_join(handle_tcp, NULL);
+	if (gui_backend_started) {
+		pthread_join(handle_gui_backend, NULL);
+	}
 
 	return 0;
 

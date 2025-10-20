@@ -9,10 +9,11 @@
 
 #include <command/command.h>
 #include <time.h>
+#include <math.h>
 #include "predict.h"
 #include "serial_rotator.h"
-#include "status_publisher.h"
-#include <stdio.h>
+#include "doppler_freq_correction.h"
+#include "gui_backend.h"
 
 /* GS100/AX100 configuration parameter*/
 #define AX100_PORT_RPARAM	7	/* task_server remote param port */
@@ -71,6 +72,55 @@ static uint32_t sat_no = 1;	// Initialisation tracking Lumelite 1
 static void doppler_tracking(int txfreq, int rxfreq, uint32_t tnow);
 int mcs_sat_sel(uint32_t sat_no_sel);
 int ping_sat_func(void);
+
+int doppler_get_tx_freq(void)
+{
+	return TXfreq;
+}
+
+int doppler_get_rx_freq(void)
+{
+	return RXfreq;
+}
+
+void doppler_get_tle(char *tle1_buf, size_t tle1_buf_len,
+				   char *tle2_buf, size_t tle2_buf_len)
+{
+	if (tle1_buf && tle1_buf_len > 0) {
+		size_t max_copy = tle1_buf_len - 1;
+		if (max_copy > 0) {
+			strncpy(tle1_buf, TLE1, max_copy);
+			tle1_buf[max_copy] = '\0';
+		} else {
+			tle1_buf[0] = '\0';
+		}
+	}
+	if (tle2_buf && tle2_buf_len > 0) {
+		size_t max_copy = tle2_buf_len - 1;
+		if (max_copy > 0) {
+			strncpy(tle2_buf, TLE2, max_copy);
+			tle2_buf[max_copy] = '\0';
+		} else {
+			tle2_buf[0] = '\0';
+		}
+	}
+}
+
+int doppler_set_tx_freq(uint32_t freq)
+{
+	if (!ax100_set_tx_freq(AX100_V3_ADDRESS, AX100_V3_TIMEOUT, freq))
+		return 0;
+	TXfreq = (int)freq;
+	return 1;
+}
+
+int doppler_set_rx_freq(uint32_t freq)
+{
+	if (!ax100_set_rx_freq(AX100_V3_ADDRESS, AX100_V3_TIMEOUT, freq))
+		return 0;
+	RXfreq = (int)freq;
+	return 1;
+}
 
 int ax100_set_tx_freq(uint8_t node, uint32_t timeout, uint32_t freq)
 {
@@ -227,9 +277,6 @@ static void ground_pass_in_progress(long time_aos,long time_los)
 	{
 		log_warning("Ground pass begin: %.24s", ctime((time_t *) &tnowl));
 		
-		// notify GUI-backend: we have entered Tracking mode
-    	status_publisher_send("{\"type\":\"gs_mode\",\"mode\":\"Tracking\"}");
-		
 		while (tnowl < time_los)
 		{
 			clock_get_time(&clock);
@@ -245,8 +292,6 @@ static void ground_pass_in_progress(long time_aos,long time_los)
 		if(serial_set_az_el(70,0) < 1)
 			log_debug("AZEL reset AZ: 150 EL: 0 failed");
 		log_warning("Ground pass ended: %.24s", ctime((time_t *) &tnowl));
-		// notify GUI-backend: pass is over, back to Idle mode
-		status_publisher_send("{\"type\":\"gs_mode\",\"mode\":\"Idle\"}");
 	}
 	return;
 }
@@ -274,6 +319,20 @@ void doppler_init()
 
 	while (1)
 	{			
+		#define GUI_BACKEND_MAX_PASSES 10
+		gui_backend_pass_t passes[GUI_BACKEND_MAX_PASSES];
+		int idx = 0;
+		const char *sat_name = "Lumelite 4"; // Replace with actual satellite name if available
+		passes[idx++] = (gui_backend_pass_t){
+			.name = sat_name,
+			.aos_utc = time_aos,
+			.los_utc = time_los,
+			.duration_sec = (uint16_t)(time_los - time_aos),
+			.peak_elevation_deg = (uint16_t)ele_m,
+		};
+		gui_backend_update_pass_schedule(passes, idx);
+
+
 		/* Estimate next ground pass AOS and LOS time*/
 		set_calc_time(tnow - (TNOW_OFFSET));
 		PreCalc();
@@ -362,6 +421,28 @@ static void doppler_tracking(int txfreq, int rxfreq, uint32_t tnow)
 
 	/* Repetively calculate and update the sat info */	
 	Calc();
+
+sat_info_t info = {};
+getSatInfo(&info);
+
+// Define and assign tle_epoch_time from sat_info or set to 0 if unavailable
+uint32_t tle_epoch_time = 0;
+#ifdef HAVE_TLE_EPOCH_IN_SAT_INFO
+tle_epoch_time = info.tle_epoch;
+#endif
+
+gui_backend_satellite_t sat_info_struct = {
+	.norad_id = sat_no, // Use sat_no or the correct NORAD ID variable
+	.lat_deg = info.sat_lat,
+	.lon_deg = info.sat_lon,
+	.alt_km = info.sat_alt,
+	.velocity_km_s = info.sat_vel,
+	.range_km = info.sat_range,
+	.range_rate_km_s = info.sat_range_rate,
+	.tle_epoch = tle_epoch_time
+};
+gui_backend_update_satellite(&sat_info_struct);
+
 	
 	/* Get ground pass parameter */
 	double az = get_azi();
@@ -391,26 +472,6 @@ static void doppler_tracking(int txfreq, int rxfreq, uint32_t tnow)
 
 	log_info("AZ: %f, EL: %f, RX: %"PRIu32" TX: %"PRIu32, az, el, rx_freq, tx_freq);
 	log_info("Sat Latitude: %f, Longitude: %f, Altitude: %f km, Velocity: %f km/s", satlat, satlon, satalt, satvel);
-    // publish current tracking state to GUI-backend
-    {
-        char buf[256];
-        snprintf(buf, sizeof(buf),
-            "{"
-			"\"az\":%.2f,"
-			"\"el\":%.2f,"
-			"\"rx_freq\":%u,"
-			"\"tx_freq\":%u,"
-            "\"satlat\":%.6f,"
-			"\"satlon\":%.6f,"
-			"\"satalt\":%.1f,"
-            "\"satvel\":%.2f,"
-			"\"norad_id\":%u"
-			"}",
-            az, el, rx_freq, tx_freq,
-            satlat, satlon, satalt,
-            satvel, sat_no);
-        status_publisher_send(buf);
-    }
 	
 	/* Impose minimum elevation -> start of Ground pass */
 	if (el < MIN_ELEVATION){

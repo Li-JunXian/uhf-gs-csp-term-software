@@ -1,3 +1,9 @@
 {
+<<<<<<< HEAD
     "C_Cpp.default.compilerPath": "/usr/bin/clang"
+=======
+    "files.associations": {
+        "stdlib.h": "c"
+    }
+>>>>>>> donor/main
 }

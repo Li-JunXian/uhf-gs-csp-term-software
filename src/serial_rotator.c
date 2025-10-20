@@ -23,6 +23,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <util/log.h>
 #include <command/command.h>
 #include <stdio.h>
@@ -35,13 +36,38 @@
 // set AZEL CMD lock to '1' to prevent antenna movemnet else '0'
 #define AZEL_TRACK_CMD_LOCK	0
 
-static char *serial_port = "/dev/ttyUSB1";
+static const char *serial_port_default = "/dev/ttyUSB4";
 static int azi_old = -1;
 static int ele_old = -1;
 
 int set_interface(int fd, int speed, int parity);
 int serial_set_az_el(int azi,int ele);
 int serial_read(void);
+
+static const char *serial_port_path(void)
+{
+	const char *env = getenv("GS232B_PORT");
+	if (env != NULL && env[0] != '\0')
+		return env;
+	return serial_port_default;
+}
+
+static void bytes_to_hex(const unsigned char *data, size_t len, char *out, size_t out_len)
+{
+	if (out_len == 0)
+		return;
+	out[0] = '\0';
+	size_t pos = 0;
+	for (size_t i = 0; i < len && pos + 1 < out_len; ++i) {
+		int written = snprintf(out + pos, out_len - pos, "%02X%s", data[i],
+				       (i + 1 < len) ? " " : "");
+		if (written < 0 || (size_t)written >= out_len - pos) {
+			out[out_len - 1] = '\0';
+			break;
+		}
+		pos += (size_t)written;
+	}
+}
 
 int set_interface(int fd, int speed, int parity)
 {
@@ -87,16 +113,17 @@ int set_interface(int fd, int speed, int parity)
 int serial_read()
 {
 	
-	int fd = open (serial_port, O_RDWR | O_NOCTTY);
+	const char *port = serial_port_path();
+	int fd = open (port, O_RDWR | O_NOCTTY);
 	if (fd < 0)
 	{
-        	log_error("error connecting GS232B serial port");
-        	return 0;
+		log_error("error connecting GS232B serial port (%s): %s", port, strerror(errno));
+		return 0;
 	}else{
-		log_info("GS232B serial port connected");
+		log_info("GS232B serial port (%s) connected", port);
 	}
 
-	if (set_interface(fd, B4800, 0) != 0)  // set speed to 9600 bps, 8n1 (no parity)
+	if (set_interface(fd, B9600, 0) != 0)  // set speed to 9600 bps, 8n1 (no parity)
 	{
 		log_error("error interface setup");
 		return 0;
@@ -111,11 +138,24 @@ int serial_read()
 	char buf [100] = "";
 
 	wr = write(fd,&read_buf,sizeof(read_buf)-1);
+	if (wr < 0) {
+		log_error("Failed to write GS232B command (%s): %s", port, strerror(errno));
+		close(fd);
+		return 0;
+	}
 	log_info("Send %d bytes: %s",wr,read_buf);
 	//usleep(100);	// delay for GS232B to respond	
-	
+
 	rd = read (fd, buf, sizeof buf);  // read up to 100 characters
-	log_info("Receive %d bytes: %s",rd, buf);
+	if (rd < 0) {
+		log_error("Failed to read GS232B response (%s): %s", port, strerror(errno));
+		close(fd);
+		return 0;
+	}
+	// char hex_buf[3 * sizeof(buf) + 1];
+	// bytes_to_hex((unsigned char *)buf, (size_t)rd, hex_buf, sizeof(hex_buf));
+	// log_info("Receive %d bytes: %s",rd, hex_buf);
+        log_info("Receive %d bytes: %s",rd, buf);
 
 	close(fd);
 
@@ -148,14 +188,15 @@ int serial_set_az_el(int azi,int ele)
 	azi_old = azi;
 	ele_old = ele;
 
-	int fd = open (serial_port, O_RDWR | O_NOCTTY);
+	const char *port = serial_port_path();
+	int fd = open (port, O_RDWR | O_NOCTTY);
 	if (fd < 0)
 	{
-        	log_error("error connecting GS232B serial port");
-        	return 0;
+		log_error("error connecting GS232B serial port (%s): %s", port, strerror(errno));
+		return 0;
 	}
 
-	if (set_interface(fd, B4800, 0) != 0)  // set speed to 9600 bps, 8n1 (no parity)
+	if (set_interface(fd, B9600, 0) != 0)  // set speed to 9600 bps, 8n1 (no parity)
 	{
 		log_error("error interface setup");
 		return 0;
@@ -166,15 +207,20 @@ int serial_set_az_el(int azi,int ele)
 	char set_az_el[] = "W150 000\r"; //default antenna orientation
 
 	int wr = 0;
-	
+
 	sprintf(set_az_el+1,"%03d %03d\r", azi+AZIMMUTH_ANGLE_OFFSET, ele);
 
 
 	log_info("%s",set_az_el);
 	wr = write(fd,&set_az_el,sizeof(set_az_el)-1);
-	if (wr == 0)
+	if (wr == 0) {
 		log_error("Setting AZ:%d EL%d failed",azi,ele);
-
+	} else if (wr > 0) {
+		gui_backend_notify_rotator(azi, ele, 1);
+	} else {
+		gui_backend_notify_rotator(azi, ele, 0);
+	}
+	
 	close(fd);
 
 	return 1;

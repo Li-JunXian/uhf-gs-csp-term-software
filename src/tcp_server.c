@@ -30,11 +30,9 @@
 
 #include "send_packet.h"
 #include "doppler_freq_correction.h"
-#include "status_publisher.h"
-#include "serial_rotator.h"
  
 #define LENGTH 512
-#define MCS_PORT 1028
+#define MCS_PORT 1128 /* switched from 1028 to avoid local port conflicts */
 #define MCS_DATA_DIR "/home/rai/Desktop/GS_Server_Folder/Received_From_MCS/"
 #define LOG 10
  
@@ -138,13 +136,6 @@ void tcp_server(void)
                         			printf("[TCP Server] Connection Established from %s (MCS Client)\n", inet_ntoa(addr_remote.sin_addr));
 						memset(client_addr,0,20);
 						strcpy(client_addr, inet_ntoa(addr_remote.sin_addr));
-						{
-						    char ack_buf[256];
-						    snprintf(ack_buf, sizeof(ack_buf),
-							     "{\"type\":\"cmd_ack\",\"ts\":%ld,\"data\":{\"event\":\"connect\",\"peer\":\"%s\"}}",
-							     (long) time(NULL), client_addr);
-						    status_publisher_send(ack_buf);
-						}
                     			}
 				} else {
 					/* Handle data sent from MCS */
@@ -154,82 +145,41 @@ void tcp_server(void)
                         			if (nbytes == 0) {
                             				/* connection closed by MCS*/
                             				printf("Connection %d terminated by MCS\n", i);
-                            				{
-                            				    char ack_buf[256];
-                            				    snprintf(ack_buf, sizeof(ack_buf),
-                            					     "{\"type\":\"cmd_ack\",\"ts\":%ld,\"data\":{\"event\":\"disconnect\",\"peer\":\"%s\"}}",
-                            					     (long) time(NULL), client_addr);
-                            				    status_publisher_send(ack_buf);
-                            				}
                         			} else {
                             				log_error("Failure in recv() function, connection terminated...");
-                            				{
-                            				    char err_buf[256];
-                            				    snprintf(err_buf, sizeof(err_buf),
-                            					     "{\"type\":\"error\",\"ts\":%ld,\"data\":{\"component\":\"tcp_server\",\"message\":\"recv_failed\"}}",
-                            					     (long) time(NULL));
-                            				    status_publisher_send(err_buf);
-                            				}
                         			}
                         			close(i);
                         			FD_CLR(i, &master); // remove fd from master set
-                                        } else {
-                                                /* Recevieve data from MCS */
-                                                if (strncmp((char *)msg_buffer, "ROT ", 4) == 0) {
-                                                        int az = 0;
-                                                        int el = 0;
-                                                        char resp[8] = "ERR\n";
-                                                        if (sscanf((char *)msg_buffer + 4, "%d %d", &az, &el) == 2) {
-                                                                if (az < 0)
-                                                                        az = 0;
-                                                                else if (az > 360)
-                                                                        az = 360;
-                                                                if (el < 0)
-                                                                        el = 0;
-                                                                else if (el > 90)
-                                                                        el = 90;
-                                                                if (serial_set_az_el(az, el)) {
-                                                                        strcpy(resp, "OK\n");
-                                                                }
-                                                        }
-                                                        send(i, resp, strlen(resp), 0);
-                                                } else {
-                                                        strcpy(fr_name,"");
-                                                        strcpy(fr_name,MCS_DATA_DIR);
+                    			} else {
+                        			/* Recevieve data from MCS */
+                        			strcpy(fr_name,"");
+						strcpy(fr_name,MCS_DATA_DIR);
 
-                                                        char time_data_get[100] = "";
-                                                        get_time(time_data_get);
-                                                        strcat(fr_name,time_data_get);
-                                                        strcat(fr_name,".bin");
-                                                        printf("Saving into file %s ......", fr_name);
+						char time_data_get[100] = "";
+						get_time(time_data_get);
+						strcat(fr_name,time_data_get);
+						strcat(fr_name,".bin");
+						printf("Saving into file %s ......", fr_name);
+	
+						FILE *fr = fopen(fr_name, "wb");
+						if(fr == NULL) {
+							log_error("File %s Cannot be opened.\n", fr_name);
+						} else {
+							int write_sz = fwrite(msg_buffer, sizeof(char), nbytes, fr);
+							if(write_sz < nbytes) {
+								log_error("Saving Failed, file size error.\n");
+		    					}
+						}
+						printf("Complete!");
+						fclose(fr);
 
-                                                        FILE *fr = fopen(fr_name, "wb");
-                                                        if(fr == NULL) {
-                                                                log_error("File %s Cannot be opened.\n", fr_name);
-                                                        } else {
-                                                                int write_sz = fwrite(msg_buffer, sizeof(char), nbytes, fr);
-                                                                if(write_sz < nbytes) {
-                                                                        log_error("Saving Failed, file size error.\n");
-                                                                }
-                                                        }
-                                                        printf("Complete!");
-                                                        fclose(fr);
-
-                                                        send_packet(fr_name);
-                                                        {
-                                                            char ack_buf[512];
-                                                            snprintf(ack_buf, sizeof(ack_buf),
-                                                                     "{\"type\":\"cmd_ack\",\"ts\":%ld,\"data\":{\"event\":\"uplink_received\",\"bytes\":%d,\"file\":\"%s\",\"peer\":\"%s\"}}",
-                                                                     (long) time(NULL), nbytes, fr_name, client_addr);
-                                                            status_publisher_send(ack_buf);
-                                                        }
-                                                }
-                                        }
+						send_packet(fr_name);
+					}
                                 }
-                        }
-                }
-        }
-        return;
+			}
+		}
+	}
+	return;
 }
 
 int retransmit_packet(struct command_context *ctx)

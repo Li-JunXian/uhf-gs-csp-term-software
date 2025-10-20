@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # project csp-term (v2.9) configured on Fri Jul 25 10:25:29 2025 by
 # waf 1.8.7 (abi 98, python 2070cf0 on linux2)
 # using ./waf configure with-clients=nanocom-ax
@@ -24,6 +25,38 @@ find program=['sphinx-build'] paths=['/usr/local/sbin', '/usr/local/bin', '/usr/
 Checking for program 'pkg-config'
 /usr/bin/pkg-config
 find program=['pkg-config'] paths=['/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/snap/bin'] var='PKGCONFIG' -> ['/usr/bin/pkg-config']
+=======
+<<<<<<< HEAD
+# project csp-term (v2.9) configured on Wed Oct  8 12:32:44 2025 by
+=======
+# project csp-term (v2.9) configured on Wed Oct  8 18:06:21 2025 by
+>>>>>>> dc0671f (Update that works)
+# waf 1.8.7 (abi 98, python 2070cf0 on linux2)
+# using ./waf configure
+#
+----------------------------------------
+Setting top to
+/home/emil/Desktop/uhf-gs-csp-term-software_22may2025
+----------------------------------------
+Setting out to
+/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build
+----------------------------------------
+Checking for program 'gcc, cc'
+/usr/bin/gcc
+find program=['gcc', 'cc'] paths=['/home/emil/bin', '/home/emil/.local/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games', '/snap/bin'] var='CC' -> ['/usr/bin/gcc']
+----------------------------------------
+Checking for program 'ar'
+/usr/bin/ar
+find program=['ar'] paths=['/home/emil/bin', '/home/emil/.local/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games', '/snap/bin'] var='AR' -> ['/usr/bin/ar']
+----------------------------------------
+Checking for program 'sphinx-build'
+/usr/bin/sphinx-build
+find program=['sphinx-build'] paths=['/home/emil/bin', '/home/emil/.local/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games', '/snap/bin'] var='SPHINX_BUILD' -> ['/usr/bin/sphinx-build']
+----------------------------------------
+Checking for program 'pkg-config'
+/usr/bin/pkg-config
+find program=['pkg-config'] paths=['/home/emil/bin', '/home/emil/.local/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games', '/snap/bin'] var='PKGCONFIG' -> ['/usr/bin/pkg-config']
+>>>>>>> donor/main
 ----------------------------------------
 Checking for 'libcurl'
 ['/usr/bin/pkg-config', '--cflags', '--libs', 'libcurl']
@@ -54,10 +87,24 @@ int use_ebcdic (int i) {
 extern int foo;
 
 <==
+<<<<<<< HEAD
 [1/2] Compiling [32mbuild/.conf_check_27d14898f62636e8944c6bd947e1c43a/test.c[0m
 
 ['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="38128a4"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '../test.c', '-c', '-o', '/home/urop_student/uhf-gs-csp-term-software/build/.conf_check_27d14898f62636e8944c6bd947e1c43a/testbuild/test.c.1.o']
 [2/2] Processing [35mbuild/.conf_check_27d14898f62636e8944c6bd947e1c43a/testbuild/test.c.1.o[0m
+=======
+<<<<<<< HEAD
+[1/2] Compiling [32mbuild/.conf_check_e984424a9c3781d3f3ca48c176e644c6/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="99d57b0"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_e984424a9c3781d3f3ca48c176e644c6/testbuild/test.c.1.o']
+[2/2] Processing [35mbuild/.conf_check_e984424a9c3781d3f3ca48c176e644c6/testbuild/test.c.1.o[0m
+=======
+[1/2] Compiling [32mbuild/.conf_check_0db947bf5e8a5c2077ad52fda499bf4c/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="99d57b0"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_0db947bf5e8a5c2077ad52fda499bf4c/testbuild/test.c.1.o']
+[2/2] Processing [35mbuild/.conf_check_0db947bf5e8a5c2077ad52fda499bf4c/testbuild/test.c.1.o[0m
+>>>>>>> dc0671f (Update that works)
+>>>>>>> donor/main
 
 little
 ----------------------------------------
@@ -71,10 +118,24 @@ int main(int argc, char **argv) {
 }
 
 <==
+<<<<<<< HEAD
 [1/2] Compiling [32mbuild/.conf_check_8cf1d0a11702ae869f881fda3eed750c/test.c[0m
 
 ['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="38128a4"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '../test.c', '-c', '-o', '/home/urop_student/uhf-gs-csp-term-software/build/.conf_check_8cf1d0a11702ae869f881fda3eed750c/testbuild/test.c.1.o']
 [2/2] Linking [33mbuild/.conf_check_8cf1d0a11702ae869f881fda3eed750c/testbuild/libtestprog.a[0m
+=======
+<<<<<<< HEAD
+[1/2] Compiling [32mbuild/.conf_check_ec1abd68f15df4d5495ce54f12f1adbd/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="99d57b0"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_ec1abd68f15df4d5495ce54f12f1adbd/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_ec1abd68f15df4d5495ce54f12f1adbd/testbuild/libtestprog.a[0m
+=======
+[1/2] Compiling [32mbuild/.conf_check_4bdc83b56d81e82fc7680a1d54dfa351/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="99d57b0"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_4bdc83b56d81e82fc7680a1d54dfa351/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_4bdc83b56d81e82fc7680a1d54dfa351/testbuild/libtestprog.a[0m
+>>>>>>> dc0671f (Update that works)
+>>>>>>> donor/main
 
 ['/usr/bin/ar', 'rcs', 'libtestprog.a', 'test.c.1.o']
 yes
@@ -88,12 +149,30 @@ int main(int argc, char **argv) {
 }
 
 <==
+<<<<<<< HEAD
 [1/2] Compiling [32mbuild/.conf_check_1da48542346e35bf219bdad52047e23c/test.c[0m
 
 ['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="38128a4"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '-DCSP_HAVE_STDBOOL_H=1', '../test.c', '-c', '-o', '/home/urop_student/uhf-gs-csp-term-software/build/.conf_check_1da48542346e35bf219bdad52047e23c/testbuild/test.c.1.o']
 [2/2] Linking [33mbuild/.conf_check_1da48542346e35bf219bdad52047e23c/testbuild/testprog[0m
 
 ['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/urop_student/uhf-gs-csp-term-software/build/.conf_check_1da48542346e35bf219bdad52047e23c/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-lsocketcan']
+=======
+<<<<<<< HEAD
+[1/2] Compiling [32mbuild/.conf_check_be2c174121021f214516a9c552d8ebe3/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="99d57b0"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '-DCSP_HAVE_STDBOOL_H=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_be2c174121021f214516a9c552d8ebe3/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_be2c174121021f214516a9c552d8ebe3/testbuild/testprog[0m
+
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_be2c174121021f214516a9c552d8ebe3/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-lsocketcan']
+=======
+[1/2] Compiling [32mbuild/.conf_check_e2590383e344be764721143c913d9dd1/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="99d57b0"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=100', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_CONNECTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '-DCSP_HAVE_STDBOOL_H=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_e2590383e344be764721143c913d9dd1/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_e2590383e344be764721143c913d9dd1/testbuild/testprog[0m
+
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_e2590383e344be764721143c913d9dd1/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-lsocketcan']
+>>>>>>> dc0671f (Update that works)
+>>>>>>> donor/main
 yes
 (tool gcc is already loaded, skipping)
 (tool gcc is already loaded, skipping)
@@ -114,10 +193,24 @@ int use_ebcdic (int i) {
 extern int foo;
 
 <==
+<<<<<<< HEAD
 [1/2] Compiling [32mbuild/.conf_check_359abc73a901f850ec1e318885e63d13/test.c[0m
 
 ['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DLOG_CDH="1"', '-DRTC_ENABLED=1', '../test.c', '-c', '-o', '/home/urop_student/uhf-gs-csp-term-software/build/.conf_check_359abc73a901f850ec1e318885e63d13/testbuild/test.c.1.o']
 [2/2] Processing [35mbuild/.conf_check_359abc73a901f850ec1e318885e63d13/testbuild/test.c.1.o[0m
+=======
+<<<<<<< HEAD
+[1/2] Compiling [32mbuild/.conf_check_97ca8630921b593544de31b5edb32d85/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DLOG_CDH="1"', '-DRTC_ENABLED=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_97ca8630921b593544de31b5edb32d85/testbuild/test.c.1.o']
+[2/2] Processing [35mbuild/.conf_check_97ca8630921b593544de31b5edb32d85/testbuild/test.c.1.o[0m
+=======
+[1/2] Compiling [32mbuild/.conf_check_632555d50d197a126e61d3b786e9746b/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DLOG_CDH="1"', '-DRTC_ENABLED=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_632555d50d197a126e61d3b786e9746b/testbuild/test.c.1.o']
+[2/2] Processing [35mbuild/.conf_check_632555d50d197a126e61d3b786e9746b/testbuild/test.c.1.o[0m
+>>>>>>> dc0671f (Update that works)
+>>>>>>> donor/main
 
 little
 (tool gcc is already loaded, skipping)
@@ -132,12 +225,30 @@ int main(int argc, char **argv) {
 }
 
 <==
+<<<<<<< HEAD
 [1/2] Compiling [32mbuild/.conf_check_975dc901f1e7d9df3209c36cf9006717/test.c[0m
 
 ['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DCONSOLE_HISTORY_ENABLE=1', '-DCONSOLE_HISTORY_ELEMENTS=10', '-DCONSOLE_BUFSIZ=100', '../test.c', '-c', '-o', '/home/urop_student/uhf-gs-csp-term-software/build/.conf_check_975dc901f1e7d9df3209c36cf9006717/testbuild/test.c.1.o']
 [2/2] Linking [33mbuild/.conf_check_975dc901f1e7d9df3209c36cf9006717/testbuild/testprog[0m
 
 ['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/urop_student/uhf-gs-csp-term-software/build/.conf_check_975dc901f1e7d9df3209c36cf9006717/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+=======
+<<<<<<< HEAD
+[1/2] Compiling [32mbuild/.conf_check_000b9baefa43db41b8b9989e7d6e817b/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DCONSOLE_HISTORY_ENABLE=1', '-DCONSOLE_HISTORY_ELEMENTS=10', '-DCONSOLE_BUFSIZ=100', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_000b9baefa43db41b8b9989e7d6e817b/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_000b9baefa43db41b8b9989e7d6e817b/testbuild/testprog[0m
+
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_000b9baefa43db41b8b9989e7d6e817b/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+=======
+[1/2] Compiling [32mbuild/.conf_check_36cf06595c07b74b62dfe390b8b84864/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DCONSOLE_HISTORY_ENABLE=1', '-DCONSOLE_HISTORY_ELEMENTS=10', '-DCONSOLE_BUFSIZ=100', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_36cf06595c07b74b62dfe390b8b84864/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_36cf06595c07b74b62dfe390b8b84864/testbuild/testprog[0m
+
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_36cf06595c07b74b62dfe390b8b84864/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+>>>>>>> dc0671f (Update that works)
+>>>>>>> donor/main
 yes
 (tool gcc is already loaded, skipping)
 ----------------------------------------
@@ -151,12 +262,30 @@ int main(int argc, char **argv) {
 }
 
 <==
+<<<<<<< HEAD
 [1/2] Compiling [32mbuild/.conf_check_78ddebbfa0cf1168d15ff3e7902efae5/test.c[0m
 
 ['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DENABLE_FTP_FILE_BACKEND=1', '-DENABLE_FTP_CLIENT=1', '../test.c', '-c', '-o', '/home/urop_student/uhf-gs-csp-term-software/build/.conf_check_78ddebbfa0cf1168d15ff3e7902efae5/testbuild/test.c.1.o']
 [2/2] Linking [33mbuild/.conf_check_78ddebbfa0cf1168d15ff3e7902efae5/testbuild/testprog[0m
 
 ['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/urop_student/uhf-gs-csp-term-software/build/.conf_check_78ddebbfa0cf1168d15ff3e7902efae5/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+=======
+<<<<<<< HEAD
+[1/2] Compiling [32mbuild/.conf_check_e4f01e82d809c68d7cc6906850f704c7/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DENABLE_FTP_FILE_BACKEND=1', '-DENABLE_FTP_CLIENT=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_e4f01e82d809c68d7cc6906850f704c7/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_e4f01e82d809c68d7cc6906850f704c7/testbuild/testprog[0m
+
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_e4f01e82d809c68d7cc6906850f704c7/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+=======
+[1/2] Compiling [32mbuild/.conf_check_b0fb2cdec4cb5bd485cab071c287019a/test.c[0m
+
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DENABLE_FTP_FILE_BACKEND=1', '-DENABLE_FTP_CLIENT=1', '../test.c', '-c', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_b0fb2cdec4cb5bd485cab071c287019a/testbuild/test.c.1.o']
+[2/2] Linking [33mbuild/.conf_check_b0fb2cdec4cb5bd485cab071c287019a/testbuild/testprog[0m
+
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/emil/Desktop/uhf-gs-csp-term-software_22may2025/build/.conf_check_b0fb2cdec4cb5bd485cab071c287019a/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+>>>>>>> dc0671f (Update that works)
+>>>>>>> donor/main
 yes
 ----------------------------------------
 Clients included:
