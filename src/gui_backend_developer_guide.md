@@ -90,9 +90,9 @@ Commands are ASCII lines terminated by `\n`. The parser is case-insensitive and 
 | `PING` | Responds `OK PONG`. |
 | `HELP` | Prints available commands. |
 | `STATUS` | Returns framed JSON snapshot. |
-| `SET_MODE <idle|tracking|maintenance>` | Updates station mode; replies `OK SET_MODE value`. |
-| `SET_EMERGENCY <true|false|1|0|on|off>` | Sets emergency stop; replies `OK SET_EMERGENCY true|false`. |
-| `SET_SAT <1..255>` | Calls `mcs_sat_sel()`; on success returns `OK SATELLITE n`. |
+| `SET_MODE <idle\|tracking\|maintenance>` | Updates station mode; replies `OK SET_MODE value`. |
+| `SET_EMERGENCY <true\|false\|1\|0\|on\|off>` | Sets emergency stop; replies `OK SET_EMERGENCY true|false`. |
+| `SET_SAT <1..255>` | Calls `mcs_sat_sel()`; on success returns `OK SATELLITE`. |
 | `SET_TX <freq_hz>` / `SET_RX <freq_hz>` | Invokes Doppler setters, caches frequency, and acknowledges. |
 | `SET_AZEL <az> <el>` (alias `SET_ROTATOR`) | Sends rotator command via `serial_set_az_el`. |
 | `SEND_PACKET <pri> <src> <dst> <dst_port> <src_port> <hmac> <xtea> <rdp> <crc> <hex_payload>` | Converts payload to bytes, uses `send_packet_struct`, and replies `OK SEND_PACKET <len>`. |
