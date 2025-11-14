@@ -30,6 +30,7 @@
 
 - Primary verification platform: Ubuntu 16.04 LTS (4.4 series kernel) on an x86_64 workstation with 8 GB RAM.
 - Integrated hardware-in-the-loop setup: production ground-station controller running the RF front-end, rotator interface, and `gui_backend_start()` service.
+- Python toolchain: Ubuntu 16.04 ships Python 2.7.12 and Python 3.5.2; the Waf-based build scripts and optional CSP Python bindings operate correctly with CPython ≥ 2.5 (`lib/libcsp/src/arch/windows/README`).
 - Ensure compatible serial adapters and CSP radio hardware are available if you plan to issue RF or rotator commands from the user guide steps.
 
 ### Pre-Session Checklist
