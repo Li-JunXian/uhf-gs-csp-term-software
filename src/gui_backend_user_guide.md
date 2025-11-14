@@ -26,6 +26,12 @@
 - A scripting environment (Python, Node, etc.) if you plan to parse telemetry or automate command sequences.
 - JSON-aware viewer to inspect the periodic snapshots.
 
+### System Pre-requisites
+
+- Primary verification platform: Ubuntu 16.04 LTS (4.4 series kernel) on an x86_64 workstation with 8 GB RAM.
+- Integrated hardware-in-the-loop setup: production ground-station controller running the RF front-end, rotator interface, and `gui_backend_start()` service.
+- Ensure compatible serial adapters and CSP radio hardware are available if you plan to issue RF or rotator commands from the user guide steps.
+
 ### Pre-Session Checklist
 
 1. Confirm the backend process is running (check `ps` or system supervisor logs).
@@ -41,14 +47,16 @@
 
 ### Sample Interactive Session
 
-```text
-$ nc groundstation.local 1029
-PING
-OK PONG
-STATUS
-OK STATUS
-{"type":"status","station":{"name":"GS-ALPHA","mode":"IDLE","emergency_stop":false,"lat":1.2976,"lon":103.7803,"alt_m":40.2,"true_north_deg":2.0,"time_utc":"2025-10-20T03:41:05Z","time_local":"2025-10-20T11:41:05"},"antenna":{"az_deg":45,"el_deg":10,"last_command_success":true},"rf":{"tx_hz":437505000,"rx_hz":145950000},"satellite":{"norad":99555,"lat_deg":-12.4,"lon_deg":110.3,"alt_km":520.1,"velocity_km_s":7.5,"range_km":1320.4,"range_rate_km_s":-1.2,"tle_age_sec":86400},"passes":[{"name":"CSP-11","aos":"2025-10-20T03:55:12Z","los":"2025-10-20T04:05:55Z","duration_sec":643,"peak_elevation_deg":62}],"faults":[]}
-END
+Terminal transcripts in this guide use diff-colored blocks: lines starting with `+ $` represent user input (green) and `- >>` represent backend responses (red).
+
+```diff
++ $ nc groundstation.local 1029
++ $ PING
+- >> OK PONG
++ $ STATUS
+- >> OK STATUS
+- >> {"type":"status","station":{"name":"GS-ALPHA","mode":"IDLE","emergency_stop":false,"lat":1.2976,"lon":103.7803,"alt_m":40.2,"true_north_deg":2.0,"time_utc":"2025-10-20T03:41:05Z","time_local":"2025-10-20T11:41:05"},"antenna":{"az_deg":45,"el_deg":10,"last_command_success":true},"rf":{"tx_hz":437505000,"rx_hz":145950000},"satellite":{"norad":99555,"lat_deg":-12.4,"lon_deg":110.3,"alt_km":520.1,"velocity_km_s":7.5,"range_km":1320.4,"range_rate_km_s":-1.2,"tle_age_sec":86400},"passes":[{"name":"CSP-11","aos":"2025-10-20T03:55:12Z","los":"2025-10-20T04:05:55Z","duration_sec":643,"peak_elevation_deg":62}],"faults":[]}
+- >> END
 ```
 
 Notes:
@@ -167,13 +175,13 @@ Notes:
 
 ### Sample Output
 
-```text
-GET_EVENTS 3
-OK EVENTS 3
-2025-10-20T03:40:55Z INFO GUI | Station mode (TRACKING)
-2025-10-20T03:40:57Z UPLINK GUI | Uplink transmission (success bytes=2048)
-2025-10-20T03:41:02Z INFO ROTATOR | Rotator command (az=45 el=10 success)
-END
+```diff
++ $ GET_EVENTS 3
+- >> OK EVENTS 3
+- >> 2025-10-20T03:40:55Z INFO GUI | Station mode (TRACKING)
+- >> 2025-10-20T03:40:57Z UPLINK GUI | Uplink transmission (success bytes=2048)
+- >> 2025-10-20T03:41:02Z INFO ROTATOR | Rotator command (az=45 el=10 success)
+- >> END
 ```
 
 ## Troubleshooting
@@ -196,3 +204,4 @@ END
 - Remember to release emergency stop and confirm station mode before scheduling autonomous passes.
 
 v1.0 – 12 NOV 2025
+v1.1 - 14 NOV 2025
