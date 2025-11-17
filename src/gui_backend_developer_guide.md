@@ -6,6 +6,7 @@
 - It listens on port `1029`, accepts up to eight concurrent clients, and uses newline-delimited ASCII commands.
 - Cached state includes station metadata, RF configuration, antenna status, satellite telemetry, pass schedule, and recent events.
 
+
 ## Architecture
 
 - **Threaded TCP server**: `gui_backend_start()` launches `gui_backend_thread()`, which runs a blocking `select()` loop with a one-second timeout (`src/gui_backend.c:1165-1338`).
@@ -13,6 +14,7 @@
 - **State cache**: `gui_state` (mutex guarded) stores the latest uplink/downlink summaries, rotator state, station information, RF settings, satellite snapshot, pass schedule, and a 64-entry event ring (`src/gui_backend.c:50-109`).
 - **Telemetry broadcast**: once per second the backend sends a JSON telemetry snapshot to every connected client (`src/gui_backend.c:1207-1338`).
 - **Event ring buffer**: `gui_backend_push_event()` timestamps, stores, and (when necessary) drops the oldest entries (`src/gui_backend.c:166-190`).
+
 
 ## Subsystem Interfaces
 
@@ -27,6 +29,7 @@ Exported helpers in `src/gui_backend.h` keep the cache current:
 | `gui_backend_update_satellite(const gui_backend_satellite_t *sat)` | Updates satellite telemetry fields and TLE epoch (`src/gui_backend.c:365-367`, `src/gui_backend.c:418-440`). |
 | `gui_backend_notify_uplink/downlink` | Records the latest transport transaction and emits an event (`src/gui_backend.c:193-252`). |
 | `gui_backend_notify_rotator(int az, int el, int success)` | Tracks rotator command results for the GUI (`src/gui_backend.c:254-270`). |
+
 
 ## Snapshot and Telemetry
 
@@ -81,6 +84,7 @@ Exported helpers in `src/gui_backend.h` keep the cache current:
 
 - `STATUS` replies include `OK STATUS` and `END` framing; the periodic broadcast omits the framing and sets `"type":"telemetry"`.
 
+
 ## Command Protocol
 
 Commands are ASCII lines terminated by `\n`. The parser is case-insensitive and validates argument counts (`src/gui_backend.c:1024-1108`).
@@ -101,17 +105,20 @@ Commands are ASCII lines terminated by `\n`. The parser is case-insensitive and 
 
 Invalid or incomplete commands yield `ERROR` responses.
 
+
 ## Event History
 
 - `gui_backend_push_event()` stamps entries with `CLOCK_REALTIME` and stores them in the ring at `gui_state.events` (`src/gui_backend.c:166-190`).
 - `gui_backend_event_type_t` is mapped to strings (`UPLINK`, `DOWNLINK`, `INFO`, `ERROR`) by `gui_backend_event_type_to_string()` (`src/gui_backend.c:1322-1374`).
 - `GET_EVENTS` enumerates the newest entries, respecting optional limits, and formats them as plain text (`src/gui_backend.c:936-1000`).
 
+
 ## Telemetry Broadcast Loop
 
 1. `select()` waits with a one-second timeout (`struct timeval timeout = {1, 0};`).
 2. After each wake, `gui_backend_emit_status_to_all()` sends the latest telemetry snapshot to every client (`src/gui_backend.c:689-705`).
 3. Socket activity is processed by accepting new clients or reading buffered data; dead sockets are closed when `recv()` returns `<= 0`.
+
 
 ## Integration Guidelines
 
@@ -128,6 +135,7 @@ Invalid or incomplete commands yield `ERROR` responses.
 - Consume the continuous `"telemetry"` JSON feed; use the `"type"` field to distinguish from `STATUS`.
 - Poll `GET_EVENTS` to render historical activity; consider parsing severity strings to color-code entries.
 - After issuing setters (`SET_MODE`, `SET_EMERGENCY`, etc.), rely on the telemetry feed to verify the state change.
+
 
 ## Extensibility Notes
 

@@ -1,9 +1,11 @@
 # GUI Backend User Guide
 
+
 ## Audience and Scope
 
 - Written for payload operators, ground-station technicians, and anyone integrating a dashboard with the GUI backend.
 - Focuses on day-to-day control, telemetry consumption, and troubleshooting. For internal APIs or implementation notes, see `src/gui_backend_developer_guide.md`.
+
 
 ## System Overview
 
@@ -11,6 +13,7 @@
 - Every open socket receives an unsolicited JSON telemetry snapshot once per second. Direct commands produce framed replies.
 - Cached state covers station metadata, RF configuration, antenna position, satellite telemetry, pass predictions, and a ring buffer of recent events.
 - Command handling is case-insensitive; responses always begin with `OK` or `ERROR`.
+
 
 ## Prerequisites and Quick Checklist
 
@@ -30,7 +33,7 @@
 
 - Primary verification platform: Ubuntu 16.04 LTS (4.4 series kernel) on an x86_64 workstation with 8 GB RAM.
 - Integrated hardware-in-the-loop setup: production ground-station controller running the RF front-end, rotator interface, and `gui_backend_start()` service.
-- Python toolchain: Ubuntu 16.04 ships Python 2.7.12 and Python 3.5.2; the Waf-based build scripts and optional CSP Python bindings operate correctly with CPython ≥ 2.5 (`lib/libcsp/src/arch/windows/README`).
+- Python toolchain: Ubuntu 16.04 ships Python 2.7.12 and Python 3.5.2; the Waf-based build scripts and optional CSP Python bindings operate correctly with CPython >= 2.5 (`lib/libcsp/src/arch/windows/README`).
 - Ensure compatible serial adapters and CSP radio hardware are available if you plan to issue RF or rotator commands from the user guide steps.
 
 ### Pre-Session Checklist
@@ -38,6 +41,7 @@
 1. Confirm the backend process is running (check `ps` or system supervisor logs).
 2. Ensure no more than eight users are already connected; otherwise connections will be refused.
 3. Decide whether you are only monitoring (read-only) or also issuing state-changing commands; coordinate with other operators accordingly.
+
 
 ## Connecting and Verifying the Link
 
@@ -48,7 +52,9 @@
 
 ### Sample Interactive Session
 
-Terminal transcripts in this guide use diff-colored blocks: lines starting with `+ $` represent user input (green) and `- >>` represent backend responses (red).
+Terminal transcripts in this guide use diff-colored blocks:
+
+lines starting with `+ $` represent user input (green) and `- >>` represent backend responses (red).
 
 ```diff
 + $ nc groundstation.local 1029
@@ -64,6 +70,7 @@ Notes:
 
 - Terminate each command with `\n`. `\r\n` is also accepted; trailing `\r` characters are stripped.
 - If you close the socket, reconnect to keep receiving telemetry. There is no reconnection backoff from the server.
+
 
 ## Working With the Telemetry Stream
 
@@ -86,6 +93,7 @@ Notes:
 - Prefer long-lived connections to avoid missing telemetry. If you must reconnect, discard partial JSON (no chunked framing).
 - Treat the `"type"` field as the discriminator when multiplexing command responses and telemetry.
 - When writing custom clients, add a read loop that splits on `\n`, buffers until JSON braces balance, then parse.
+
 
 ## Command Reference
 
@@ -128,6 +136,7 @@ Notes:
 - All numeric arguments are parsed as base-10 by default; a `0x` prefix enables hexadecimal.
 - Commands are atomic; you do not need to wait between requests, but avoid flooding (stick to <10 commands/sec) to keep buffers manageable.
 
+
 ## Operational Playbooks
 
 ### Monitor an Upcoming Pass
@@ -167,6 +176,7 @@ Notes:
 2. Issue `SEND_PACKET ...` with the correct header fields (ports 0–63).
 3. On `OK SEND_PACKET <len>`, watch the telemetry/events feed for an `UPLINK` entry confirming the result.
 
+
 ## Event History and Auditing
 
 - The backend stores 64 events in a ring buffer; `GET_EVENTS` paginates from newest to oldest.
@@ -185,6 +195,7 @@ Notes:
 - >> END
 ```
 
+
 ## Troubleshooting
 
 | Symptom | Likely Cause | Resolution |
@@ -195,6 +206,7 @@ Notes:
 | No reply to `SET_AZEL` | Handler intentionally silent. | Confirm via telemetry (`antenna.last_command_success`) or look for rotator events. |
 | Telemetry stops updating | TCP socket dropped or backend hung. | Reconnect; if issue persists, inspect backend logs and consider restarting `gui_backend_start()`. |
 | Frequent disconnects | Client not reading fast enough or network idle timeout. | Ensure your script drains the socket continuously; disable TCP keepalive timeouts if necessary. |
+
 
 ## Quick Reference
 
